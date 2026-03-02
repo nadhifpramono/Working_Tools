@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-
-// ✅ Import ke profile yang ada di folder profile
-// Struktur: lib/pages/dashboard/dashboard.dart
-//           lib/pages/profile/profile.dart
 import '../profile/profile.dart';
+import '../inventory/inventory.dart';
+import '../inventory/updateinventory.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -13,7 +11,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // ===== Theme Tokens (sesuaikan dengan desain kamu) =====
+
   static const Color NAVY = Color(0xFF101D6E);
   static const Color BG = Color(0xFFF2F9FF);
   static const Color CARD = Color(0xFFFAFEFF);
@@ -40,9 +38,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ OPSIONAL (Production-like):
-    // 1) body pakai IndexedStack biar tab tidak reset & tidak numpuk navigation
-    // 2) BottomNav cukup setState index saja
     return Scaffold(
       backgroundColor: BG,
       body: IndexedStack(
@@ -59,13 +54,10 @@ class _DashboardPageState extends State<DashboardPage> {
             onLanguageChanged: (v) => setState(() => _language = v),
           ),
 
-          // ✅ Placeholder Notification tab (kalau belum ada page-nya)
           const _PlaceholderPage(title: 'Notification'),
-
-          // ✅ Placeholder File Manager tab (kalau belum ada page-nya)
           const _PlaceholderPage(title: 'File Manager'),
 
-          // ✅ Ini yang kamu minta: Profile di folder profile
+          // ✅ Profile
           ProfilePage(),
         ],
       ),
@@ -74,7 +66,6 @@ class _DashboardPageState extends State<DashboardPage> {
       bottomNavigationBar: _BottomNav(
         currentIndex: _navIndex,
         onTap: (i) {
-          // biar popup tidak nyangkut saat pindah tab
           _popup.hide();
           setState(() => _navIndex = i);
         },
@@ -84,7 +75,7 @@ class _DashboardPageState extends State<DashboardPage> {
 }
 
 // =======================================================
-// ✅ DASHBOARD HOME BODY (Isi dashboard kamu, dipisah supaya clean)
+// ✅ DASHBOARD HOME BODY
 // =======================================================
 
 class _DashboardHomeBody extends StatelessWidget {
@@ -216,7 +207,7 @@ class _DashboardHomeBody extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // ===== Grid Menu 2x3 (responsive) =====
+                  // ===== Grid Menu =====
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -247,13 +238,24 @@ class _DashboardHomeBody extends StatelessWidget {
                           border: BORDER,
                           onTap: () {},
                         ),
+
+                        // ✅ INI YANG KAMU MAU: klik kotak inventory -> buka InventoryPage()
                         _MenuTile(
                           label: 'inventory',
                           icon: Icons.inventory_2_outlined,
                           bg: SOFT,
                           border: BORDER,
-                          onTap: () {},
+                          onTap: () {
+                            popup.hide();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const InventoryPage(),
+                              ),
+                            );
+                          },
                         ),
+
                         _MenuTile(
                           label: 'notes',
                           icon: Icons.event_note_outlined,
@@ -293,24 +295,23 @@ class _DashboardHomeBody extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   _ActivityCard(
-                    bg: SOFT,
-                    border: BORDER,
-                    items: const [
-                      _ActivityItemData(
-                        title: 'Safety inspection Completed',
-                        icon: Icons.check_circle,
-                      ),
-                      _ActivityItemData(
-                        title: 'Inventory Update',
-                        icon: Icons.inventory,
-                      ),
-                      _ActivityItemData(
-                        title: 'New Task Assigned',
-                        icon: Icons.assignment,
-                      ),
-                    ],
-                    onTapItem: (index) {},
-                  ),
+  bg: SOFT,
+  border: BORDER,
+  items: const [
+    _ActivityItemData(title: 'Safety inspection Completed', icon: Icons.check_circle),
+    _ActivityItemData(title: 'Inventory Update', icon: Icons.inventory),
+    _ActivityItemData(title: 'New Task Assigned', icon: Icons.assignment),
+  ],
+  onTapItem: (index) {
+    if (index == 1) {
+      // ✅ Inventory Update
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const UpdateInventoryPage()),
+      );
+    }
+  },
+),
 
                   const SizedBox(height: 16),
                 ],
@@ -583,9 +584,6 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-// =======================================================
-// ✅ SETTINGS POPUP (Overlay) — muncul seperti gambar
-// =======================================================
 
 class SettingsPopupController {
   OverlayEntry? _entry;
@@ -616,7 +614,7 @@ class SettingsPopupController {
             CompositedTransformFollower(
               link: link,
               showWhenUnlinked: false,
-              offset: const Offset(-260, 38), // geser kiri + turun
+              offset: const Offset(-260, 38),
               child: Material(
                 color: Colors.transparent,
                 child: _SettingsPopupCard(
@@ -901,8 +899,7 @@ class _RowAction extends StatelessWidget {
 }
 
 // =======================================================
-// ✅ Placeholder sederhana supaya tab lain tidak error dulu
-// (nanti kamu bisa ganti ke NotificationPage/FileManagerPage asli)
+// ✅ Placeholder tab
 // =======================================================
 
 class _PlaceholderPage extends StatelessWidget {

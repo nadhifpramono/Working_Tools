@@ -17,7 +17,18 @@ class _ProfilePageState extends State<ProfilePage> {
   static const Color BORDER = Color(0xFFDCECFF);
   static const Color TEXT = Color(0xFF111827);
 
-  int _navIndex = 3; // profile aktif
+  // ===== Settings Popup State =====
+  final SettingsPopupController _popup = SettingsPopupController();
+
+  bool _darkMode = false;
+  bool _pinEnabled = false;
+  String _language = 'Indonesia';
+
+  @override
+  void dispose() {
+    _popup.hide();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,19 +58,37 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
-                    InkWell(
-                      onTap: () {},
-                      borderRadius: BorderRadius.circular(12),
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(Icons.settings, color: Colors.white),
-                      ),
+
+                    // ✅ Settings icon -> popup nempel gear (web/mobile aman)
+                    Builder(
+                      builder: (btnCtx) {
+                        return InkWell(
+                          onTap: () {
+                            _popup.showAnchored(
+                              context: context,
+                              targetContext: btnCtx,
+                              darkMode: _darkMode,
+                              pinEnabled: _pinEnabled,
+                              language: _language,
+                              onDarkModeChanged: (v) => setState(() => _darkMode = v),
+                              onPinChanged: (v) => setState(() => _pinEnabled = v),
+                              onLanguageChanged: (v) => setState(() => _language = v),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Icon(Icons.settings, color: Colors.white),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
             ),
 
+            // ===== Content =====
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               sliver: SliverList(
@@ -70,6 +99,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       name: 'Hanyakra Narendra',
                       role: 'Supervisor',
                       onEdit: () {
+                        _popup.hide();
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -95,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               width: itemW,
                               height: itemH,
                               color: NAVY,
-                              onTap: () {},
+                              onTap: () => _popup.hide(),
                             );
                           }),
                         );
@@ -111,21 +141,21 @@ class _ProfilePageState extends State<ProfilePage> {
                           icon: Icons.build_outlined,
                           iconColor: Colors.black,
                           label: 'Service',
-                          onTap: () {},
+                          onTap: () => _popup.hide(),
                         ),
                         const _DividerLine(),
                         _MenuRow(
                           icon: Icons.check_circle,
                           iconColor: const Color(0xFF16A34A),
                           label: 'Available',
-                          onTap: () {},
+                          onTap: () => _popup.hide(),
                         ),
                         const _DividerLine(),
                         _MenuRow(
                           icon: Icons.history,
                           iconColor: Colors.black,
                           label: 'History',
-                          onTap: () {},
+                          onTap: () => _popup.hide(),
                         ),
                       ],
                     ),
@@ -139,14 +169,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           icon: Icons.school_outlined,
                           iconColor: Colors.black,
                           label: 'Stock out',
-                          onTap: () {},
+                          onTap: () => _popup.hide(),
                         ),
                         const _DividerLine(),
                         _MenuRow(
                           icon: Icons.inventory_2_outlined,
                           iconColor: Colors.black,
                           label: 'Stock in',
-                          onTap: () {},
+                          onTap: () => _popup.hide(),
                         ),
                       ],
                     ),
@@ -171,7 +201,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 10),
 
                     InkWell(
-                      onTap: () {},
+                      onTap: () => _popup.hide(),
                       borderRadius: BorderRadius.circular(10),
                       child: Row(
                         children: [
@@ -394,6 +424,345 @@ class _DividerLine extends StatelessWidget {
       height: 1,
       color: const Color(0xFFE5E7EB),
       margin: const EdgeInsets.symmetric(vertical: 2),
+    );
+  }
+}
+
+// =======================================================
+// ✅ SETTINGS POPUP (Anchored Overlay) — stabil di web/mobile
+// =======================================================
+
+class SettingsPopupController {
+  OverlayEntry? _entry;
+
+  void showAnchored({
+    required BuildContext context,
+    required BuildContext targetContext,
+    required bool darkMode,
+    required bool pinEnabled,
+    required String language,
+    required ValueChanged<bool> onDarkModeChanged,
+    required ValueChanged<bool> onPinChanged,
+    required ValueChanged<String> onLanguageChanged,
+  }) {
+    hide();
+
+    const double cardW = 320; // lebar card (boleh 285/300/320)
+    const double topGap = 10;
+    const double safe = 12;
+
+    final overlay = Overlay.of(context);
+    final overlayBox = overlay.context.findRenderObject() as RenderBox;
+
+    final targetBox = targetContext.findRenderObject() as RenderBox;
+    final targetTopLeft = targetBox.localToGlobal(Offset.zero, ancestor: overlayBox);
+    final targetSize = targetBox.size;
+
+    final screenW = overlayBox.size.width;
+    final screenH = overlayBox.size.height;
+
+    double left = targetTopLeft.dx - (cardW - targetSize.width);
+    double top = targetTopLeft.dy + targetSize.height + topGap;
+
+    left = left.clamp(safe, screenW - cardW - safe);
+
+    final estimatedH = 330.0; // estimasi tinggi card
+    if (top + estimatedH > screenH - safe) {
+      top = (targetTopLeft.dy - estimatedH - topGap).clamp(safe, screenH - estimatedH - safe);
+    }
+
+    _entry = OverlayEntry(
+      builder: (_) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: hide,
+                behavior: HitTestBehavior.opaque,
+                child: const SizedBox(),
+              ),
+            ),
+            Positioned(
+              left: left,
+              top: top,
+              width: cardW,
+              child: Material(
+                color: Colors.transparent,
+                child: _SettingsPopupCard(
+                  darkMode: darkMode,
+                  pinEnabled: pinEnabled,
+                  language: language,
+                  onClose: hide,
+                  onDarkModeChanged: onDarkModeChanged,
+                  onPinChanged: onPinChanged,
+                  onLanguageChanged: onLanguageChanged,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    overlay.insert(_entry!);
+  }
+
+  void hide() {
+    _entry?.remove();
+    _entry = null;
+  }
+}
+
+class _SettingsPopupCard extends StatelessWidget {
+  final bool darkMode;
+  final bool pinEnabled;
+  final String language;
+
+  final VoidCallback onClose;
+  final ValueChanged<bool> onDarkModeChanged;
+  final ValueChanged<bool> onPinChanged;
+  final ValueChanged<String> onLanguageChanged;
+
+  const _SettingsPopupCard({
+    required this.darkMode,
+    required this.pinEnabled,
+    required this.language,
+    required this.onClose,
+    required this.onDarkModeChanged,
+    required this.onPinChanged,
+    required this.onLanguageChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.only(top: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F5FF),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFDCECFF)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                InkWell(
+                  onTap: onClose,
+                  borderRadius: BorderRadius.circular(10),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.arrow_back, size: 18),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Expanded(
+                  child: Text(
+                    'Pengaturan',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                  ),
+                ),
+                const Icon(Icons.settings, size: 18, color: Color(0xFF6B7280)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _SectionCard(
+              title: 'Tampilan',
+              child: Column(
+                children: [
+                  _RowSwitch(
+                    icon: Icons.dark_mode_outlined,
+                    label: 'Mode gelap',
+                    value: darkMode,
+                    onChanged: onDarkModeChanged,
+                  ),
+                  const SizedBox(height: 8),
+                  _RowDropdown(
+                    icon: Icons.language_outlined,
+                    label: 'Bahasa',
+                    value: language,
+                    items: const ['Indonesia', 'English'],
+                    onChanged: onLanguageChanged,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            _SectionCard(
+              title: 'Keamanan',
+              child: Column(
+                children: [
+                  _RowAction(
+                    icon: Icons.lock_outline,
+                    label: 'Ganti kata sandi',
+                    onTap: onClose,
+                  ),
+                  const SizedBox(height: 8),
+                  _RowSwitch(
+                    icon: Icons.pin_outlined,
+                    label: 'Aktifkan pin',
+                    value: pinEnabled,
+                    onChanged: onPinChanged,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _SectionCard({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.78),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFDCECFF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              color: Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _RowSwitch extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _RowSwitch({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF111827)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+        ),
+        Switch.adaptive(value: value, onChanged: onChanged),
+      ],
+    );
+  }
+}
+
+class _RowDropdown extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final List<String> items;
+  final ValueChanged<String> onChanged;
+
+  const _RowDropdown({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF111827)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+        ),
+        DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: value,
+            items: items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RowAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _RowAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: const Color(0xFF111827)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6B7280)),
+          ],
+        ),
+      ),
     );
   }
 }
