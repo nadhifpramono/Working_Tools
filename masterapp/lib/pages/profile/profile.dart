@@ -30,6 +30,13 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
+  void _onTapNotification() {
+    _popup.hide();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Notification clicked")),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
@@ -57,6 +64,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                    ),
+
+                    // ✅ Notification icon (bell) seperti di chat/dashboard
+                    IconButton(
+                      onPressed: _onTapNotification,
+                      icon: const Icon(Icons.notifications_none_rounded),
+                      color: Colors.white,
+                      tooltip: "Notifications",
                     ),
 
                     // ✅ Settings icon -> popup nempel gear (web/mobile aman)
@@ -447,7 +462,7 @@ class SettingsPopupController {
   }) {
     hide();
 
-    const double cardW = 320; // lebar card (boleh 285/300/320)
+    const double cardW = 320;
     const double topGap = 10;
     const double safe = 12;
 
@@ -466,7 +481,7 @@ class SettingsPopupController {
 
     left = left.clamp(safe, screenW - cardW - safe);
 
-    final estimatedH = 330.0; // estimasi tinggi card
+    final estimatedH = 330.0;
     if (top + estimatedH > screenH - safe) {
       top = (targetTopLeft.dy - estimatedH - topGap).clamp(safe, screenH - estimatedH - safe);
     }
@@ -718,9 +733,7 @@ class _RowDropdown extends StatelessWidget {
         DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: value,
-            items: items
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
+            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
             onChanged: (v) {
               if (v != null) onChanged(v);
             },

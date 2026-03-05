@@ -3,6 +3,9 @@ import '../profile/profile.dart';
 import '../inventory/inventory.dart';
 import '../inventory/updateinventory.dart';
 
+// ✅ TAMBAH IMPORT INI
+import '../chat/chat.dart'; // sesuaikan path kamu: contoh lib/chat/chat.dart
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -11,7 +14,6 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-
   static const Color NAVY = Color(0xFF101D6E);
   static const Color BG = Color(0xFFF2F9FF);
   static const Color CARD = Color(0xFFFAFEFF);
@@ -21,6 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   static const Color MUTED = Color(0xFF6B7280);
 
   int _navIndex = 0;
+  
 
   // ===== Settings Popup State =====
   final LayerLink _settingsLink = LayerLink();
@@ -54,10 +57,10 @@ class _DashboardPageState extends State<DashboardPage> {
             onLanguageChanged: (v) => setState(() => _language = v),
           ),
 
-          const _PlaceholderPage(title: 'Notification'),
+          const ChatPage(),
+
           const _PlaceholderPage(title: 'File Manager'),
 
-          // ✅ Profile
           ProfilePage(),
         ],
       ),
@@ -74,9 +77,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-// =======================================================
-// ✅ DASHBOARD HOME BODY
-// =======================================================
 
 class _DashboardHomeBody extends StatelessWidget {
   final LayerLink settingsLink;
@@ -120,60 +120,71 @@ class _DashboardHomeBody extends StatelessWidget {
     return SafeArea(
       child: CustomScrollView(
         slivers: [
-          // ===== Top Header (biru) + setting =====
           SliverToBoxAdapter(
             child: Container(
               height: isTablet ? 90 : 80,
               decoration: const BoxDecoration(color: NAVY),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Dasboard (home page)',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: isTablet ? 18 : 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+  children: [
+    Expanded(
+      child: Text(
+        'Dasboard (home page)',
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.9),
+          fontSize: isTablet ? 18 : 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
 
-                  // ✅ Icon settings + anchor popup
-                  CompositedTransformTarget(
-                    link: settingsLink,
-                    child: InkWell(
-                      onTap: () {
-                        popup.show(
-                          context: context,
-                          link: settingsLink,
-                          darkMode: darkMode,
-                          pinEnabled: pinEnabled,
-                          language: language,
-                          onDarkModeChanged: onDarkModeChanged,
-                          onPinChanged: onPinChanged,
-                          onLanguageChanged: onLanguageChanged,
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(Icons.settings, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+    // ✅ NOTIF (bell) seperti halaman chat
+    IconButton(
+      onPressed: () {
+        // contoh: pindah ke tab Chat
+        // kalau kamu mau notif beneran nanti kita buat page notif nya
+        // ignore: use_build_context_synchronously
+        // (ini aman kalau cuma setState)
+        // pakai callback kalau mau lebih rapi
+      },
+      icon: const Icon(Icons.notifications_none_rounded),
+      color: Colors.white,
+      tooltip: 'Notifications',
+    ),
+
+    // ✅ SETTINGS (tetap ada popup)
+    CompositedTransformTarget(
+      link: settingsLink,
+      child: InkWell(
+        onTap: () {
+          popup.show(
+            context: context,
+            link: settingsLink,
+            darkMode: darkMode,
+            pinEnabled: pinEnabled,
+            language: language,
+            onDarkModeChanged: onDarkModeChanged,
+            onPinChanged: onPinChanged,
+            onLanguageChanged: onLanguageChanged,
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Icon(Icons.settings, color: Colors.white),
+        ),
+      ),
+    ),
+  ],
+),
             ),
           ),
 
-          // ===== Content =====
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
-                  // ===== Profile Card =====
                   _ProfileCard(
                     cardColor: CARD,
                     borderColor: const Color(0xFFE2E0E0),
@@ -181,10 +192,8 @@ class _DashboardHomeBody extends StatelessWidget {
                     role: 'Supervisor',
                     onTap: () {},
                   ),
-
                   const SizedBox(height: 14),
 
-                  // ===== Quick Buttons (4 kotak kecil biru) =====
                   LayoutBuilder(
                     builder: (context, c) {
                       final spacing = 12.0;
@@ -207,7 +216,6 @@ class _DashboardHomeBody extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // ===== Grid Menu =====
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -238,8 +246,6 @@ class _DashboardHomeBody extends StatelessWidget {
                           border: BORDER,
                           onTap: () {},
                         ),
-
-                        // ✅ INI YANG KAMU MAU: klik kotak inventory -> buka InventoryPage()
                         _MenuTile(
                           label: 'inventory',
                           icon: Icons.inventory_2_outlined,
@@ -255,7 +261,6 @@ class _DashboardHomeBody extends StatelessWidget {
                             );
                           },
                         ),
-
                         _MenuTile(
                           label: 'notes',
                           icon: Icons.event_note_outlined,
@@ -283,7 +288,6 @@ class _DashboardHomeBody extends StatelessWidget {
 
                   const SizedBox(height: 14),
 
-                  // ===== Recent Activities =====
                   Text(
                     'Recent Activities',
                     style: TextStyle(
@@ -295,23 +299,27 @@ class _DashboardHomeBody extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   _ActivityCard(
-  bg: SOFT,
-  border: BORDER,
-  items: const [
-    _ActivityItemData(title: 'Safety inspection Completed', icon: Icons.check_circle),
-    _ActivityItemData(title: 'Inventory Update', icon: Icons.inventory),
-    _ActivityItemData(title: 'New Task Assigned', icon: Icons.assignment),
-  ],
-  onTapItem: (index) {
-    if (index == 1) {
-      // ✅ Inventory Update
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const UpdateInventoryPage()),
-      );
-    }
-  },
-),
+                    bg: SOFT,
+                    border: BORDER,
+                    items: const [
+                      _ActivityItemData(
+                          title: 'Safety inspection Completed',
+                          icon: Icons.check_circle),
+                      _ActivityItemData(
+                          title: 'Inventory Update', icon: Icons.inventory),
+                      _ActivityItemData(
+                          title: 'New Task Assigned', icon: Icons.assignment),
+                    ],
+                    onTapItem: (index) {
+                      if (index == 1) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const UpdateInventoryPage()),
+                        );
+                      }
+                    },
+                  ),
 
                   const SizedBox(height: 16),
                 ],
@@ -323,8 +331,6 @@ class _DashboardHomeBody extends StatelessWidget {
     );
   }
 }
-
-// =================== WIDGETS ===================
 
 class _ProfileCard extends StatelessWidget {
   final Color cardColor;
@@ -464,7 +470,8 @@ class _MenuTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: isTablet ? 30 : 26, color: const Color(0xFF111827)),
+              Icon(icon,
+                  size: isTablet ? 30 : 26, color: const Color(0xFF111827)),
               const SizedBox(height: 8),
               Text(
                 label,
@@ -528,7 +535,9 @@ class _ActivityCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(item.icon, color: const Color(0xFF16A34A), size: isTablet ? 26 : 22),
+                  Icon(item.icon,
+                      color: const Color(0xFF16A34A),
+                      size: isTablet ? 26 : 22),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -576,14 +585,14 @@ class _BottomNav extends StatelessWidget {
       unselectedItemColor: const Color(0xFF6B7280),
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Notification'),
+        // ✅ ganti label + icon
+        BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
         BottomNavigationBarItem(icon: Icon(Icons.folder_open), label: 'File Manager'),
         BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
       ],
     );
   }
 }
-
 
 class SettingsPopupController {
   OverlayEntry? _entry;
@@ -704,7 +713,8 @@ class _SettingsPopupCard extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                   ),
                 ),
-                const Icon(Icons.settings, size: 18, color: Color(0xFF6B7280)),
+                const Icon(Icons.settings,
+                    size: 18, color: Color(0xFF6B7280)),
               ],
             ),
             const SizedBox(height: 10),
@@ -851,7 +861,9 @@ class _RowDropdown extends StatelessWidget {
         DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: value,
-            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            items: items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
             onChanged: (v) {
               if (v != null) onChanged(v);
             },
@@ -890,7 +902,8 @@ class _RowAction extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6B7280)),
+            const Icon(Icons.chevron_right,
+                size: 18, color: Color(0xFF6B7280)),
           ],
         ),
       ),
