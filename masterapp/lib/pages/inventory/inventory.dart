@@ -31,42 +31,42 @@ class _InventoryPageState extends State<InventoryPage> {
       icon: Icons.engineering,
       current: 50,
       max: 50,
-      status: _StockStatus.runOut,
+      status: _StockStatus.runOut, category: '',
     ),
     _InventoryItem(
       name: 'Drill Machine',
       icon: Icons.handyman,
       current: 23,
       max: 5,
-      status: _StockStatus.available,
+      status: _StockStatus.available, category: '',
     ),
     _InventoryItem(
       name: 'Jaket Safety',
       icon: Icons.checkroom,
       current: 50,
       max: 25,
-      status: _StockStatus.available,
+      status: _StockStatus.available, category: '',
     ),
     _InventoryItem(
       name: 'Gergaji Machine',
       icon: Icons.construction,
       current: 20,
       max: 7,
-      status: _StockStatus.available,
+      status: _StockStatus.available, category: '',
     ),
     _InventoryItem(
       name: 'Unit Tractor',
       icon: Icons.agriculture,
       current: 10,
       max: 3,
-      status: _StockStatus.available,
+      status: _StockStatus.available, category: '',
     ),
     _InventoryItem(
       name: 'Unit Loader',
       icon: Icons.agriculture_outlined,
       current: 10,
       max: 4,
-      status: _StockStatus.available,
+      status: _StockStatus.available, category: '',
     ),
   ];
 
@@ -245,7 +245,7 @@ class _InventoryPageState extends State<InventoryPage> {
                 child: ListView.separated(
                   padding: const EdgeInsets.only(bottom: 6),
                   itemCount: _filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
                     final item = _filtered[i];
                     return _InventoryCard(item: item);
@@ -619,7 +619,6 @@ class _InventoryItem {
     required this.icon,
     required this.current,
     required this.max,
-    required this.status,
-    this.category = 'Semua',
+    required this.status, required this.category,
   });
 }

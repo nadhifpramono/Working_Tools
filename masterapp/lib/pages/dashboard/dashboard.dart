@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../profile/profile.dart';
 import '../inventory/inventory.dart';
 import '../inventory/updateinventory.dart';
+import '../project_management/project_management.dart';
 
 // ✅ TAMBAH IMPORT INI
 import '../chat/chat.dart'; // sesuaikan path kamu: contoh lib/chat/chat.dart
@@ -244,7 +245,15 @@ class _DashboardHomeBody extends StatelessWidget {
                           icon: Icons.assignment_outlined,
                           bg: SOFT,
                           border: BORDER,
-                          onTap: () {},
+                         onTap: () {
+                            popup.hide();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ProjectManagementPage(),
+                              ),
+                            );
+                          },
                         ),
                         _MenuTile(
                           label: 'inventory',

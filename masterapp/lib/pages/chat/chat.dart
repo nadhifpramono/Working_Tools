@@ -183,12 +183,12 @@ class _ChatPageState extends State<ChatPage> {
                         // ✅ jangan kasih bottom padding terlalu besar karena nav global sudah ada
                         padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
                         itemCount: listData.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, i) {
                           final item = listData[i];
 
                           return _SwipeTile(
-                            key: ValueKey("${item.name}-$i-${_segment}"),
+                            key: ValueKey("${item.name}-$i-$_segment"),
                             item: item,
                             borderColor: item.highlighted ? BLUE_BADGE : BORDER,
                             onTap: () {},
