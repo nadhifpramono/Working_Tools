@@ -707,4 +707,4 @@ class _ChatItem {
     required this.verified,
     this.highlighted = false,
   });
-} 
+}   
