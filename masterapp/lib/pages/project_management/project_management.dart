@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'task_management.dart';
+import '../../models/project_item.dart';
+
 class ProjectManagementPage extends StatefulWidget {
   const ProjectManagementPage({super.key});
 
@@ -129,11 +132,25 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                       ..._filteredAndSorted().map(
                         (p) => Padding(
                           padding: const EdgeInsets.only(bottom: 14),
-                          child: ProjectCard(
-                            item: p,
-                            navy: NAVY,
-                            border: const Color(0xFFE2E0E0),
-                            track: TRACK,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => TaskManagementPage(project: p),
+                                  ),
+                                );
+                              },
+                              child: ProjectCard(
+                                item: p,
+                                navy: NAVY,
+                                border: const Color(0xFFE2E0E0),
+                                track: TRACK,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -607,23 +624,3 @@ class ProjectCard extends StatelessWidget {
 }
 
 // ===================== MODEL =====================
-
-class ProjectItem {
-  final String title;
-  final String subtitle;
-  final double progress; // 0..1
-  final String status;
-  final int totalTask;
-  final int doneTask;
-  final String deadline;
-
-  const ProjectItem({
-    required this.title,
-    required this.subtitle,
-    required this.progress,
-    required this.status,
-    required this.totalTask,
-    required this.doneTask,
-    required this.deadline,
-  });
-}
