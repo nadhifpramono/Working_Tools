@@ -1,5 +1,6 @@
-// lib/pages/chat.dart
 import 'package:flutter/material.dart';
+import 'chating.dart';
+import '../notifications/notification.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -9,7 +10,6 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  // ===== Theme Tokens =====
   static const Color NAVY = Color(0xFF101D6E);
   static const Color BG = Color(0xFFF7F7FB);
   static const Color CARD = Color(0xFFFFFFFF);
@@ -21,102 +21,147 @@ class _ChatPageState extends State<ChatPage> {
   static const Color PURPLE = Color(0xFF6B257F);
   static const Color BLUE_BADGE = Color(0xFF3641B7);
 
-  int _segment = 1; // ✅ default ke Groups (0=Chats, 1=Groups)
+  int _segment = 1;
   final TextEditingController _searchC = TextEditingController();
 
   final List<_ChatItem> _items = [
     _ChatItem(
       name: "Kaitlyn",
+      roleOrStatus: "online",
       lastMessage: "Have a good one!",
       time: "3:02 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: true,
+      messages: const [
+        ChatMessage(text: "Hello!", isMe: false),
+        ChatMessage(text: "Have a good one!", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Chloe",
+      roleOrStatus: "offline",
       lastMessage: "Hello! Are you available for toni...",
       time: "2:58 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 2,
       verified: false,
+      messages: const [
+        ChatMessage(text: "Hello! Are you available for tonight?", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "X Client",
+      roleOrStatus: "online",
       lastMessage: "I’m not gonna pay you.",
       time: "2:46 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: true,
       highlighted: true,
+      messages: const [
+        ChatMessage(text: "I’m not gonna pay you.", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Phoebe",
+      roleOrStatus: "online",
       lastMessage: "Good bye!",
       time: "2:41 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: true,
+      messages: const [
+        ChatMessage(text: "Good bye!", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Jack",
+      roleOrStatus: "online",
       lastMessage: "See you again!",
       time: "2:27 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: true,
+      messages: const [
+        ChatMessage(text: "See you again!", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Gibson",
+      roleOrStatus: "offline",
       lastMessage: "Okay, Thank you!",
       time: "2:16 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: false,
+      messages: const [
+        ChatMessage(text: "Okay, Thank you!", isMe: false),
+      ],
     ),
   ];
 
-  // ✅ DATA GROUPS
-  final List<_ChatItem> _groups = const [
+  final List<_ChatItem> _groups = [
     _ChatItem(
       name: "Group Contoh",
+      roleOrStatus: "8 anggota",
       lastMessage: "Diskusi umum grup...",
       time: "4:10 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: false,
+      messages: const [
+        ChatMessage(text: "Selamat datang di grup.", isMe: false),
+        ChatMessage(text: "Diskusi umum grup...", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Group Proyek 1",
+      roleOrStatus: "12 anggota",
       lastMessage: "Update progress hari ini...",
       time: "3:40 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 3,
       verified: false,
+      messages: const [
+        ChatMessage(text: "Update progress hari ini...", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Group Proyek 2",
+      roleOrStatus: "5 anggota",
       lastMessage: "Revisi dokumen sudah diupload",
       time: "3:05 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: false,
+      messages: const [
+        ChatMessage(text: "Revisi dokumen sudah diupload", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Group Proyek 3",
+      roleOrStatus: "6 anggota",
       lastMessage: "Meeting jam 5 sore ya",
       time: "2:30 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 1,
       verified: false,
+      messages: const [
+        ChatMessage(text: "Meeting jam 5 sore ya", isMe: false),
+      ],
     ),
     _ChatItem(
       name: "Group Proyek 4",
+      roleOrStatus: "9 anggota",
       lastMessage: "Checklist task minggu ini",
       time: "1:55 PM",
       avatarUrl: "https://placehold.co/80x80",
       unread: 0,
       verified: false,
+      messages: const [
+        ChatMessage(text: "Checklist task minggu ini", isMe: false),
+      ],
     ),
   ];
 
@@ -126,16 +171,37 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
+  void _openChat(_ChatItem item, {required bool isGroup}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatingPage(
+          chatName: item.name,
+          subtitle: item.roleOrStatus,
+          isGroup: isGroup,
+          avatarUrl: item.avatarUrl,
+          initialMessages: item.messages,
+        ),
+      ),
+    );
+  }
+
+  void _openNotificationPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const NotificationPage(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     final maxContent = w > 420 ? 420.0 : w;
     final padH = (w - maxContent) / 2;
-
     final listData = (_segment == 0) ? _items : _groups;
 
-    // ✅ PENTING: Karena Dashboard sudah punya Scaffold + bottom nav,
-    // di sini kita return "body content" saja (tanpa Scaffold + bottomNavigationBar)
     return Container(
       color: BG,
       child: SafeArea(
@@ -148,20 +214,15 @@ class _ChatPageState extends State<ChatPage> {
                   const SnackBar(content: Text("Gear clicked")),
                 );
               },
-              onBell: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Notification clicked")),
-                );
-              },
+              onBell: _openNotificationPage,
             ),
-
             Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: padH),
                 child: Column(
                   children: [
                     const SizedBox(height: 12),
-                    _ProfileCard(
+                    const _ProfileCard(
                       name: "Hanyaka Narendra",
                       role: "Supervisor",
                       avatarUrl: "https://placehold.co/120x120",
@@ -177,11 +238,13 @@ class _ChatPageState extends State<ChatPage> {
                       onNewMessage: () {},
                     ),
                     const SizedBox(height: 12),
-
                     Expanded(
                       child: ListView.separated(
-                        // ✅ jangan kasih bottom padding terlalu besar karena nav global sudah ada
-                        padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+                        padding: const EdgeInsets.only(
+                          bottom: 16,
+                          left: 16,
+                          right: 16,
+                        ),
                         itemCount: listData.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, i) {
@@ -191,7 +254,9 @@ class _ChatPageState extends State<ChatPage> {
                             key: ValueKey("${item.name}-$i-$_segment"),
                             item: item,
                             borderColor: item.highlighted ? BLUE_BADGE : BORDER,
-                            onTap: () {},
+                            onTap: () {
+                              _openChat(item, isGroup: _segment == 1);
+                            },
                             onArchive: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text("Archived: ${item.name}")),
@@ -200,13 +265,8 @@ class _ChatPageState extends State<ChatPage> {
                             onDelete: () {
                               if (_segment == 0) {
                                 setState(() => _items.removeAt(i));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Deleted: ${item.name}")),
-                                );
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Groups demo: delete disabled")),
-                                );
+                                setState(() => _groups.removeAt(i));
                               }
                             },
                           );
@@ -223,8 +283,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 }
-
-// ===================== HEADER NAVY (MIRIP DASHBOARD) =====================
 
 class _TopBarNavy extends StatelessWidget {
   final String title;
@@ -276,8 +334,6 @@ class _TopBarNavy extends StatelessWidget {
   }
 }
 
-// ===================== UI PARTS =====================
-
 class _ProfileCard extends StatelessWidget {
   final String name;
   final String role;
@@ -304,7 +360,7 @@ class _ProfileCard extends StatelessWidget {
               color: Color(0x14000000),
               blurRadius: 18,
               offset: Offset(0, 10),
-            )
+            ),
           ],
         ),
         child: Row(
@@ -479,10 +535,10 @@ class _SearchRow extends StatelessWidget {
           InkWell(
             onTap: onNewMessage,
             borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 10),
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.add, size: 16, color: _ChatPageState.PURPLE),
                   SizedBox(width: 4),
                   Text(
@@ -528,9 +584,8 @@ class _SwipeTile extends StatelessWidget {
         if (dir == DismissDirection.startToEnd) {
           onArchive();
           return false;
-        } else {
-          return true;
         }
+        return true;
       },
       onDismissed: (_) => onDelete(),
       background: _ActionBG(
@@ -560,7 +615,7 @@ class _SwipeTile extends StatelessWidget {
                   color: Color(0x0CB3B3B3),
                   blurRadius: 40,
                   offset: Offset(0, 16),
-                )
+                ),
               ],
             ),
             child: Row(
@@ -687,24 +742,26 @@ class _ActionBG extends StatelessWidget {
   }
 }
 
-// ===================== MODEL =====================
-
 class _ChatItem {
   final String name;
+  final String roleOrStatus;
   final String lastMessage;
   final String time;
   final String avatarUrl;
   final int unread;
   final bool verified;
   final bool highlighted;
+  final List<ChatMessage> messages;
 
   const _ChatItem({
     required this.name,
+    required this.roleOrStatus,
     required this.lastMessage,
     required this.time,
     required this.avatarUrl,
     required this.unread,
     required this.verified,
+    required this.messages,
     this.highlighted = false,
   });
-}   
+}

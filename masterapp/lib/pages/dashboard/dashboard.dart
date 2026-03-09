@@ -3,9 +3,8 @@ import '../profile/profile.dart';
 import '../inventory/inventory.dart';
 import '../inventory/updateinventory.dart';
 import '../project_management/project_management.dart';
-
-// ✅ TAMBAH IMPORT INI
-import '../chat/chat.dart'; // sesuaikan path kamu: contoh lib/chat/chat.dart
+import '../notifications/notification.dart';
+import '../chat/chat.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -24,9 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   static const Color MUTED = Color(0xFF6B7280);
 
   int _navIndex = 0;
-  
 
-  // ===== Settings Popup State =====
   final LayerLink _settingsLink = LayerLink();
   final SettingsPopupController _popup = SettingsPopupController();
 
@@ -38,6 +35,16 @@ class _DashboardPageState extends State<DashboardPage> {
   void dispose() {
     _popup.hide();
     super.dispose();
+  }
+
+  void _openNotificationPage() {
+    _popup.hide();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const NotificationPage(),
+      ),
+    );
   }
 
   @override
@@ -56,17 +63,13 @@ class _DashboardPageState extends State<DashboardPage> {
             onDarkModeChanged: (v) => setState(() => _darkMode = v),
             onPinChanged: (v) => setState(() => _pinEnabled = v),
             onLanguageChanged: (v) => setState(() => _language = v),
+            onTapNotification: _openNotificationPage,
           ),
-
           const ChatPage(),
-
           const _PlaceholderPage(title: 'File Manager'),
-
-          ProfilePage(),
+          const ProfilePage(),
         ],
       ),
-
-      // ===== Bottom Navigation =====
       bottomNavigationBar: _BottomNav(
         currentIndex: _navIndex,
         onTap: (i) {
@@ -77,7 +80,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 }
-
 
 class _DashboardHomeBody extends StatelessWidget {
   final LayerLink settingsLink;
@@ -90,6 +92,7 @@ class _DashboardHomeBody extends StatelessWidget {
   final ValueChanged<bool> onDarkModeChanged;
   final ValueChanged<bool> onPinChanged;
   final ValueChanged<String> onLanguageChanged;
+  final VoidCallback onTapNotification;
 
   const _DashboardHomeBody({
     required this.settingsLink,
@@ -100,9 +103,9 @@ class _DashboardHomeBody extends StatelessWidget {
     required this.onDarkModeChanged,
     required this.onPinChanged,
     required this.onLanguageChanged,
+    required this.onTapNotification,
   });
 
-  // ===== Theme Tokens =====
   static const Color NAVY = Color(0xFF101D6E);
   static const Color BG = Color(0xFFF2F9FF);
   static const Color CARD = Color(0xFFFAFEFF);
@@ -127,60 +130,49 @@ class _DashboardHomeBody extends StatelessWidget {
               decoration: const BoxDecoration(color: NAVY),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
-  children: [
-    Expanded(
-      child: Text(
-        'Dasboard (home page)',
-        style: TextStyle(
-          color: Colors.white.withOpacity(0.9),
-          fontSize: isTablet ? 18 : 14,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
-
-    // ✅ NOTIF (bell) seperti halaman chat
-    IconButton(
-      onPressed: () {
-        // contoh: pindah ke tab Chat
-        // kalau kamu mau notif beneran nanti kita buat page notif nya
-        // ignore: use_build_context_synchronously
-        // (ini aman kalau cuma setState)
-        // pakai callback kalau mau lebih rapi
-      },
-      icon: const Icon(Icons.notifications_none_rounded),
-      color: Colors.white,
-      tooltip: 'Notifications',
-    ),
-
-    // ✅ SETTINGS (tetap ada popup)
-    CompositedTransformTarget(
-      link: settingsLink,
-      child: InkWell(
-        onTap: () {
-          popup.show(
-            context: context,
-            link: settingsLink,
-            darkMode: darkMode,
-            pinEnabled: pinEnabled,
-            language: language,
-            onDarkModeChanged: onDarkModeChanged,
-            onPinChanged: onPinChanged,
-            onLanguageChanged: onLanguageChanged,
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Icon(Icons.settings, color: Colors.white),
-        ),
-      ),
-    ),
-  ],
-),
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Dasboard (home page)',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: isTablet ? 18 : 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: onTapNotification,
+                    icon: const Icon(Icons.notifications_none_rounded),
+                    color: Colors.white,
+                    tooltip: 'Notifications',
+                  ),
+                  CompositedTransformTarget(
+                    link: settingsLink,
+                    child: InkWell(
+                      onTap: () {
+                        popup.show(
+                          context: context,
+                          link: settingsLink,
+                          darkMode: darkMode,
+                          pinEnabled: pinEnabled,
+                          language: language,
+                          onDarkModeChanged: onDarkModeChanged,
+                          onPinChanged: onPinChanged,
+                          onLanguageChanged: onLanguageChanged,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(Icons.settings, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             sliver: SliverList(
@@ -194,10 +186,9 @@ class _DashboardHomeBody extends StatelessWidget {
                     onTap: () {},
                   ),
                   const SizedBox(height: 14),
-
                   LayoutBuilder(
                     builder: (context, c) {
-                      final spacing = 12.0;
+                      const spacing = 12.0;
                       final itemW = (c.maxWidth - spacing * 3) / 4;
                       final itemH = isTablet ? 80.0 : 62.0;
 
@@ -214,9 +205,7 @@ class _DashboardHomeBody extends StatelessWidget {
                       );
                     },
                   ),
-
                   const SizedBox(height: 16),
-
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -245,7 +234,7 @@ class _DashboardHomeBody extends StatelessWidget {
                           icon: Icons.assignment_outlined,
                           bg: SOFT,
                           border: BORDER,
-                         onTap: () {
+                          onTap: () {
                             popup.hide();
                             Navigator.push(
                               context,
@@ -294,9 +283,7 @@ class _DashboardHomeBody extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
                   Text(
                     'Recent Activities',
                     style: TextStyle(
@@ -306,30 +293,34 @@ class _DashboardHomeBody extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-
                   _ActivityCard(
                     bg: SOFT,
                     border: BORDER,
                     items: const [
                       _ActivityItemData(
-                          title: 'Safety inspection Completed',
-                          icon: Icons.check_circle),
+                        title: 'Safety inspection Completed',
+                        icon: Icons.check_circle,
+                      ),
                       _ActivityItemData(
-                          title: 'Inventory Update', icon: Icons.inventory),
+                        title: 'Inventory Update',
+                        icon: Icons.inventory,
+                      ),
                       _ActivityItemData(
-                          title: 'New Task Assigned', icon: Icons.assignment),
+                        title: 'New Task Assigned',
+                        icon: Icons.assignment,
+                      ),
                     ],
                     onTapItem: (index) {
                       if (index == 1) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const UpdateInventoryPage()),
+                            builder: (_) => const UpdateInventoryPage(),
+                          ),
                         );
                       }
                     },
                   ),
-
                   const SizedBox(height: 16),
                 ],
               ),
@@ -479,8 +470,11 @@ class _MenuTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon,
-                  size: isTablet ? 30 : 26, color: const Color(0xFF111827)),
+              Icon(
+                icon,
+                size: isTablet ? 30 : 26,
+                color: const Color(0xFF111827),
+              ),
               const SizedBox(height: 8),
               Text(
                 label,
@@ -544,9 +538,11 @@ class _ActivityCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(item.icon,
-                      color: const Color(0xFF16A34A),
-                      size: isTablet ? 26 : 22),
+                  Icon(
+                    item.icon,
+                    color: const Color(0xFF16A34A),
+                    size: isTablet ? 26 : 22,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -572,7 +568,11 @@ class _ActivityCard extends StatelessWidget {
 class _ActivityItemData {
   final String title;
   final IconData icon;
-  const _ActivityItemData({required this.title, required this.icon});
+
+  const _ActivityItemData({
+    required this.title,
+    required this.icon,
+  });
 }
 
 class _BottomNav extends StatelessWidget {
@@ -593,11 +593,22 @@ class _BottomNav extends StatelessWidget {
       selectedItemColor: const Color(0xFF111827),
       unselectedItemColor: const Color(0xFF6B7280),
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-        // ✅ ganti label + icon
-        BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
-        BottomNavigationBarItem(icon: Icon(Icons.folder_open), label: 'File Manager'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_filled),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat_bubble_outline),
+          label: 'Chat',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.folder_open),
+          label: 'File Manager',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'Profile',
+        ),
       ],
     );
   }
@@ -719,11 +730,17 @@ class _SettingsPopupCard extends StatelessWidget {
                 const Expanded(
                   child: Text(
                     'Pengaturan',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                const Icon(Icons.settings,
-                    size: 18, color: Color(0xFF6B7280)),
+                const Icon(
+                  Icons.settings,
+                  size: 18,
+                  color: Color(0xFF6B7280),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -779,7 +796,10 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _SectionCard({required this.title, required this.child});
+  const _SectionCard({
+    required this.title,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -831,10 +851,16 @@ class _RowSwitch extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
         ),
-        Switch.adaptive(value: value, onChanged: onChanged),
+        Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+        ),
       ],
     );
   }
@@ -864,14 +890,22 @@ class _RowDropdown extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
         ),
         DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: value,
             items: items
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .map(
+                  (e) => DropdownMenuItem<String>(
+                    value: e,
+                    child: Text(e),
+                  ),
+                )
                 .toList(),
             onChanged: (v) {
               if (v != null) onChanged(v);
@@ -908,11 +942,17 @@ class _RowAction extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
             ),
-            const Icon(Icons.chevron_right,
-                size: 18, color: Color(0xFF6B7280)),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: Color(0xFF6B7280),
+            ),
           ],
         ),
       ),
@@ -920,13 +960,12 @@ class _RowAction extends StatelessWidget {
   }
 }
 
-// =======================================================
-// ✅ Placeholder tab
-// =======================================================
-
 class _PlaceholderPage extends StatelessWidget {
   final String title;
-  const _PlaceholderPage({required this.title});
+
+  const _PlaceholderPage({
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -934,7 +973,10 @@ class _PlaceholderPage extends StatelessWidget {
       child: Center(
         child: Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );

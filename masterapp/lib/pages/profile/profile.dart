@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'editprofile.dart'; // ✅ menuju EditProfileListPage
+import 'editprofile.dart';
+import '../notifications/notification.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -9,7 +10,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // ===== Theme Tokens (samakan dengan dashboard) =====
+  // ===== Theme Tokens =====
   static const Color NAVY = Color(0xFF101D6E);
   static const Color BG = Color(0xFFF2F9FF);
   static const Color CARD = Color(0xFFFAFEFF);
@@ -32,8 +33,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _onTapNotification() {
     _popup.hide();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Notification clicked")),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const NotificationPage(),
+      ),
     );
   }
 
@@ -66,7 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
 
-                    // ✅ Notification icon (bell) seperti di chat/dashboard
+                    // ===== Notification icon =====
                     IconButton(
                       onPressed: _onTapNotification,
                       icon: const Icon(Icons.notifications_none_rounded),
@@ -74,7 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       tooltip: "Notifications",
                     ),
 
-                    // ✅ Settings icon -> popup nempel gear (web/mobile aman)
+                    // ===== Settings icon =====
                     Builder(
                       builder: (btnCtx) {
                         return InkWell(
@@ -126,10 +130,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     const SizedBox(height: 14),
 
-                    // ===== Quick Buttons (4 kotak biru) =====
+                    // ===== Quick Buttons =====
                     LayoutBuilder(
                       builder: (context, c) {
-                        final spacing = 12.0;
+                        const spacing = 12.0;
                         final itemW = (c.maxWidth - spacing * 3) / 4;
                         final itemH = isTablet ? 80.0 : 62.0;
 
@@ -161,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         const _DividerLine(),
                         _MenuRow(
                           icon: Icons.check_circle,
-                          iconColor: const Color(0xFF16A34A),
+                          iconColor: Color(0xFF16A34A),
                           label: 'Available',
                           onTap: () => _popup.hide(),
                         ),
@@ -444,7 +448,7 @@ class _DividerLine extends StatelessWidget {
 }
 
 // =======================================================
-// ✅ SETTINGS POPUP (Anchored Overlay) — stabil di web/mobile
+// SETTINGS POPUP
 // =======================================================
 
 class SettingsPopupController {
@@ -481,9 +485,12 @@ class SettingsPopupController {
 
     left = left.clamp(safe, screenW - cardW - safe);
 
-    final estimatedH = 330.0;
+    const estimatedH = 330.0;
     if (top + estimatedH > screenH - safe) {
-      top = (targetTopLeft.dy - estimatedH - topGap).clamp(safe, screenH - estimatedH - safe);
+      top = (targetTopLeft.dy - estimatedH - topGap).clamp(
+        safe,
+        screenH - estimatedH - safe,
+      );
     }
 
     _entry = OverlayEntry(
@@ -694,10 +701,16 @@ class _RowSwitch extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
         ),
-        Switch.adaptive(value: value, onChanged: onChanged),
+        Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+        ),
       ],
     );
   }
@@ -727,13 +740,23 @@ class _RowDropdown extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
         ),
         DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: value,
-            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            items: items
+                .map(
+                  (e) => DropdownMenuItem<String>(
+                    value: e,
+                    child: Text(e),
+                  ),
+                )
+                .toList(),
             onChanged: (v) {
               if (v != null) onChanged(v);
             },
@@ -769,7 +792,10 @@ class _RowAction extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
             ),
             const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6B7280)),
