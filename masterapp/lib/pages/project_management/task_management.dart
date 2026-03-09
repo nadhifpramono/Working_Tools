@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../models/project_item.dart';
+import 'document_management.dart';
+import 'note_management.dart';
 
 class TaskManagementPage extends StatefulWidget {
   final ProjectItem project;
@@ -28,6 +30,40 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
   String _priorityFilter = 'Priority';
   String _deadlineFilter = 'Deadline';
 
+  List<NoteItem> _notes = const [
+    NoteItem(
+      title: 'Meeting Safety Brief',
+      note: 'Pastikan semua pekerja menggunakan helm\n'
+          'dan sepatu safety sebelum memasuki area\n'
+          'proyek utama.',
+      created: '18 Feb 2026',
+      updated: '19 Feb 2026',
+    ),
+    NoteItem(
+      title: 'Progress Mingguan',
+      note: 'Show progress yang sudah dikerjakan selama\nseminggu',
+      created: '20 Feb 2026',
+      updated: '21 Feb 2026',
+    ),
+  ];
+
+  List<DocumentItem> _documents = const [
+    DocumentItem(
+      fileName: 'RAB Renovasi',
+      uploadBy: 'Admin',
+      description: 'Rincian anggaran dan kebutuhan material.',
+      created: '17 Feb 2026',
+      updated: '18 Feb 2026',
+    ),
+    DocumentItem(
+      fileName: 'Gambar Kerja',
+      uploadBy: 'Admin',
+      description: 'Revisi gambar kerja versi 2.',
+      created: '20 Feb 2026',
+      updated: '22 Feb 2026',
+    ),
+  ];
+
   final List<_TaskItem> _tasks = [
     _TaskItem(
       title: 'Membenarkan Plafon',
@@ -53,9 +89,74 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
     super.dispose();
   }
 
+  Future<void> _handleAddNote() async {
+    final created = formatNoteDate(DateTime.now());
+    final note = await showUpsertNoteDialog(
+      context,
+      createdDefault: created,
+      navy: NAVY,
+    );
+    if (note == null) return;
+
+    setState(() => _notes = [note, ..._notes]);
+  }
+
+  Future<void> _handleEditNote(NoteItem existing) async {
+    final index = _notes.indexOf(existing);
+    if (index < 0) return;
+
+    final updated = formatNoteDate(DateTime.now());
+    final result = await showUpsertNoteDialog(
+      context,
+      existing: existing,
+      updatedValue: updated,
+      navy: NAVY,
+    );
+    if (result == null) return;
+
+    setState(() {
+      final copy = [..._notes];
+      copy[index] = result;
+      _notes = copy;
+    });
+  }
+
+  Future<void> _handleAddDocument() async {
+    final created = formatDocumentDate(DateTime.now());
+    final doc = await showUpsertDocumentDialog(
+      context,
+      createdDefault: created,
+      navy: NAVY,
+    );
+    if (doc == null) return;
+
+    setState(() => _documents = [doc, ..._documents]);
+  }
+
+  Future<void> _handleEditDocument(DocumentItem existing) async {
+    final index = _documents.indexOf(existing);
+    if (index < 0) return;
+
+    final updated = formatDocumentDate(DateTime.now());
+    final result = await showUpsertDocumentDialog(
+      context,
+      existing: existing,
+      updatedValue: updated,
+      navy: NAVY,
+    );
+    if (result == null) return;
+
+    setState(() {
+      final copy = [..._documents];
+      copy[index] = result;
+      _documents = copy;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final visibleTasks = _filteredTasks();
+    final query = _searchC.text;
 
     return Scaffold(
       backgroundColor: BG,
@@ -79,7 +180,11 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     children: [
                       _SearchBox(
                         controller: _searchC,
-                        hint: 'Search Task',
+                        hint: _segmentIndex == 0
+                            ? 'Search Task'
+                            : _segmentIndex == 1
+                                ? 'Search Note'
+                                : 'Search Document',
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 12),
@@ -88,42 +193,44 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                         onChanged: (i) => setState(() => _segmentIndex = i),
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _FilterBox(
-                              label: _priorityFilter,
-                              onTap: () async {
-                                final result = await _showPicker(
-                                  context,
-                                  title: 'Priority',
-                                  options: const ['Priority', 'High', 'Medium', 'Low'],
-                                );
-                                if (result != null) {
-                                  setState(() => _priorityFilter = result);
-                                }
-                              },
+                      if (_segmentIndex == 0) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _FilterBox(
+                                label: _priorityFilter,
+                                onTap: () async {
+                                  final result = await _showPicker(
+                                    context,
+                                    title: 'Priority',
+                                    options: const ['Priority', 'High', 'Medium', 'Low'],
+                                  );
+                                  if (result != null) {
+                                    setState(() => _priorityFilter = result);
+                                  }
+                                },
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _FilterBox(
-                              label: _deadlineFilter,
-                              onTap: () async {
-                                final result = await _showPicker(
-                                  context,
-                                  title: 'Deadline',
-                                  options: const ['Deadline', 'Nearest', 'Farthest'],
-                                );
-                                if (result != null) {
-                                  setState(() => _deadlineFilter = result);
-                                }
-                              },
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: _FilterBox(
+                                label: _deadlineFilter,
+                                onTap: () async {
+                                  final result = await _showPicker(
+                                    context,
+                                    title: 'Deadline',
+                                    options: const ['Deadline', 'Nearest', 'Farthest'],
+                                  );
+                                  if (result != null) {
+                                    setState(() => _deadlineFilter = result);
+                                  }
+                                },
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
 
                       if (_segmentIndex == 0) ...[
                         ...visibleTasks.map(
@@ -138,14 +245,16 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                           ),
                         ),
                       ] else if (_segmentIndex == 1) ...[
-                        const _EmptySection(
-                          title: 'Belum ada note',
-                          subtitle: 'Note project akan tampil di sini.',
+                        ProjectNotesView(
+                          query: query,
+                          notes: _notes,
+                          onEdit: _handleEditNote,
                         ),
                       ] else ...[
-                        const _EmptySection(
-                          title: 'Belum ada document',
-                          subtitle: 'Document project akan tampil di sini.',
+                        ProjectDocumentsView(
+                          query: query,
+                          documents: _documents,
+                          onEdit: _handleEditDocument,
                         ),
                       ],
                     ],
@@ -157,15 +266,30 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
             Positioned(
               right: 16,
               bottom: 16,
-              child: _AddTaskButton(
+              child: _AddActionButton(
+                label: _segmentIndex == 0
+                    ? 'Add Task'
+                    : _segmentIndex == 1
+                        ? 'Add Note'
+                        : 'Add Doc',
                 onTap: () async {
-                  final task = await _showAddTaskDialog(context);
-                  if (task != null) {
-                    setState(() {
-                      _tasks.insert(0, task);
-                      _segmentIndex = 0;
-                    });
+                  if (_segmentIndex == 0) {
+                    final task = await _showAddTaskDialog(context);
+                    if (task != null) {
+                      setState(() {
+                        _tasks.insert(0, task);
+                        _segmentIndex = 0;
+                      });
+                    }
+                    return;
                   }
+
+                  if (_segmentIndex == 1) {
+                    await _handleAddNote();
+                    return;
+                  }
+
+                  await _handleAddDocument();
                 },
               ),
             ),
@@ -292,7 +416,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      value: priority,
+                      initialValue: priority,
                       decoration: InputDecoration(
                         labelText: 'Priority',
                         border: OutlineInputBorder(
@@ -773,6 +897,61 @@ class _AddTaskButton extends StatelessWidget {
               const Text(
                 'Add Task',
                 style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: _TaskManagementPageState.TEXT,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddActionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _AddActionButton({
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 82,
+          height: 66,
+          decoration: BoxDecoration(
+            color: _TaskManagementPageState.CARD,
+            borderRadius: BorderRadius.circular(7),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.13),
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircleAvatar(
+                radius: 17,
+                backgroundColor: _TaskManagementPageState.NAVY,
+                child: Icon(Icons.add, color: Colors.white, size: 20),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                style: const TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
                   color: _TaskManagementPageState.TEXT,
