@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'negochat.dart';
 
 class ChatMessage {
   final String text;
@@ -63,16 +64,131 @@ class _ChatingPageState extends State<ChatingPage> {
     });
 
     _messageC.clear();
+    _scrollToBottom();
+  }
 
+  void _addSystemLikeMessage(String text) {
+    setState(() {
+      _messages.add(ChatMessage(text: text, isMe: true));
+    });
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollC.hasClients) {
         _scrollC.animateTo(
-          _scrollC.position.maxScrollExtent + 120,
+          _scrollC.position.maxScrollExtent + 140,
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
         );
       }
     });
+  }
+
+  void _openPlusMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 54,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Pilih Aksi',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ActionMenuCard(
+                        icon: Icons.photo_camera_back_rounded,
+                        label: 'Kirim Foto',
+                        color: const Color(0xFFE8F1FF),
+                        iconColor: const Color(0xFF2563EB),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _addSystemLikeMessage('📷 Mengirim foto...');
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Fitur kirim foto dipilih'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ActionMenuCard(
+                        icon: Icons.folder_rounded,
+                        label: 'Kirim Folder',
+                        color: const Color(0xFFFFF4E5),
+                        iconColor: const Color(0xFFF59E0B),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _addSystemLikeMessage('📁 Mengirim folder...');
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Fitur kirim folder dipilih'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ActionMenuCard(
+                        icon: Icons.handshake_rounded,
+                        label: 'Nego Harga',
+                        color: const Color(0xFFF4E8FF),
+                        iconColor: const Color(0xFF7C3AED),
+                        onTap: () async {
+                          Navigator.pop(context);
+
+                          await NegoChatPopup.show(
+                            this.context,
+                            title: 'Jaket Varsity Custom',
+                            subtitle: 'Order 100 pcs • Negosiasi dengan ${widget.chatName}',
+                            initialPrice: 1500000,
+                            offeredPrice: 1350000,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -235,12 +351,35 @@ class _ChatingPageState extends State<ChatingPage> {
                       ),
                       child: Row(
                         children: [
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 8),
+
+                          InkWell(
+                            onTap: _openPlusMenu,
+                            borderRadius: BorderRadius.circular(30),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: const BoxDecoration(
+                                color: navy,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
                           const Icon(
                             Icons.emoji_emotions_outlined,
                             color: Colors.black54,
                           ),
+
                           const SizedBox(width: 10),
+
                           Expanded(
                             child: TextField(
                               controller: _messageC,
@@ -324,6 +463,52 @@ class _Bubble extends StatelessWidget {
               height: 1.35,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionMenuCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _ActionMenuCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: iconColor, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+          ],
         ),
       ),
     );
