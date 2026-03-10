@@ -71,7 +71,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
       deadline: '28 Feb 2026',
       priority: 'High',
       assignees: ['RA', 'FN', 'BK', 'DK'],
-      checked: false,
+      status: _TaskStatus.toDo,
     ),
     _TaskItem(
       title: 'Renovasi Kantor',
@@ -79,7 +79,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
       deadline: '28 Feb 2026',
       priority: 'Medium',
       assignees: ['RA', 'FN', 'BK', 'DK'],
-      checked: false,
+      status: _TaskStatus.toDo,
     ),
   ];
 
@@ -238,8 +238,8 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                             padding: const EdgeInsets.only(bottom: 14),
                             child: _TaskCard(
                               item: task,
-                              onChanged: (v) {
-                                setState(() => task.checked = v ?? false);
+                              onStatusChanged: (v) {
+                                setState(() => task.status = v);
                               },
                             ),
                           ),
@@ -463,7 +463,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     deadline: deadlineC.text.trim().isEmpty ? '-' : deadlineC.text.trim(),
                     priority: priority,
                     assignees: const ['RA', 'FN', 'BK', 'DK'],
-                    checked: false,
+                    status: _TaskStatus.toDo,
                   ),
                 );
               },
@@ -485,7 +485,7 @@ class _TaskItem {
   final String deadline;
   final String priority;
   final List<String> assignees;
-  bool checked;
+  _TaskStatus status;
 
   _TaskItem({
     required this.title,
@@ -493,7 +493,7 @@ class _TaskItem {
     required this.deadline,
     required this.priority,
     required this.assignees,
-    required this.checked,
+    required this.status,
   });
 }
 
@@ -703,11 +703,11 @@ class _FilterBox extends StatelessWidget {
 
 class _TaskCard extends StatelessWidget {
   final _TaskItem item;
-  final ValueChanged<bool?> onChanged;
+  final ValueChanged<_TaskStatus> onStatusChanged;
 
   const _TaskCard({
     required this.item,
-    required this.onChanged,
+    required this.onStatusChanged,
   });
 
   @override
@@ -724,22 +724,7 @@ class _TaskCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: Checkbox(
-                  value: item.checked,
-                  onChanged: onChanged,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  side: const BorderSide(color: _TaskManagementPageState.MUTED, width: 1.4),
-                  activeColor: _TaskManagementPageState.NAVY,
-                  checkColor: Colors.white,
-                ),
-              ),
+              _StatusIcon(status: item.status, size: 28),
               const SizedBox(width: 10),
               Expanded(
                 child: Padding(
@@ -780,7 +765,7 @@ class _TaskCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Dikerjakan :',
+                      'Status :',
                       style: TextStyle(
                         color: _TaskManagementPageState.MUTED,
                         fontSize: 12,
@@ -788,7 +773,10 @@ class _TaskCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _AvatarStack(labels: item.assignees),
+                    _StatusPicker(
+                      value: item.status,
+                      onChanged: onStatusChanged,
+                    ),
                   ],
                 ),
               ),
@@ -815,47 +803,209 @@ class _TaskCard extends StatelessWidget {
   }
 }
 
-class _AvatarStack extends StatelessWidget {
-  final List<String> labels;
+enum _TaskStatus {
+  toDo,
+  inProgress,
+  complecated,
+}
 
-  const _AvatarStack({required this.labels});
+extension _TaskStatusX on _TaskStatus {
+  String get label {
+    switch (this) {
+      case _TaskStatus.toDo:
+        return 'To do';
+      case _TaskStatus.inProgress:
+        return 'In progress';
+      case _TaskStatus.complecated:
+        return 'Completed';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case _TaskStatus.toDo:
+        return const Color(0xFF9CA3AF);
+      case _TaskStatus.inProgress:
+        return const Color(0xFF2563EB);
+      case _TaskStatus.complecated:
+        return const Color(0xFF16A34A);
+    }
+  }
+}
+
+class _StatusPicker extends StatelessWidget {
+  final _TaskStatus value;
+  final ValueChanged<_TaskStatus> onChanged;
+
+  const _StatusPicker({
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const colors = [
-      Color(0xFF3D7BFF),
-      Color(0xFF9B6DFF),
-      Color(0xFF22D98F),
-      Color(0xFFC44536),
-    ];
-
-    return SizedBox(
-      height: 22,
-      child: Stack(
-        children: List.generate(labels.length, (i) {
-          return Positioned(
-            left: i * 14,
-            child: Container(
-              width: 22,
-              height: 22,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: colors[i % colors.length],
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                labels[i],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 6.5,
-                  fontWeight: FontWeight.w700,
+    return PopupMenuButton<_TaskStatus>(
+      tooltip: 'Change status',
+      onSelected: onChanged,
+      itemBuilder: (context) {
+        return _TaskStatus.values
+            .map(
+              (s) => PopupMenuItem<_TaskStatus>(
+                value: s,
+                child: Row(
+                  children: [
+                    _StatusIcon(status: s, size: 18),
+                    const SizedBox(width: 10),
+                    Text(s.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ],
                 ),
               ),
+            )
+            .toList();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _TaskManagementPageState.MUTED.withOpacity(0.35), width: 1.2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StatusIcon(status: value, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              value.label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: _TaskManagementPageState.TEXT,
+              ),
             ),
-          );
-        }),
+            const SizedBox(width: 6),
+            const Icon(Icons.expand_more, size: 18, color: _TaskManagementPageState.MUTED),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _StatusIcon extends StatelessWidget {
+  final _TaskStatus status;
+  final double size;
+
+  const _StatusIcon({
+    required this.status,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    switch (status) {
+      case _TaskStatus.toDo:
+        return _DashedCircle(size: size, color: status.color, strokeWidth: 2);
+      case _TaskStatus.inProgress:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: status.color, width: 2),
+          ),
+          child: Center(
+            child: Container(
+              width: size * 0.36,
+              height: size * 0.36,
+              decoration: BoxDecoration(
+                color: status.color,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        );
+      case _TaskStatus.complecated:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: status.color, width: 2),
+          ),
+          child: Icon(Icons.check, size: size * 0.7, color: status.color),
+        );
+    }
+  }
+}
+
+class _DashedCircle extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double strokeWidth;
+
+  const _DashedCircle({
+    required this.size,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _DashedCirclePainter(
+        color: color,
+        strokeWidth: strokeWidth,
+        dashLength: 4,
+        gapLength: 3,
+      ),
+    );
+  }
+}
+
+class _DashedCirclePainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  const _DashedCirclePainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final rect = Offset.zero & size;
+    final path = Path()..addOval(rect.deflate(strokeWidth / 2));
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        var next = distance + dashLength;
+        if (next > metric.length) next = metric.length;
+        final segment = metric.extractPath(distance, next);
+        canvas.drawPath(segment, paint);
+        distance += dashLength + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedCirclePainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.dashLength != dashLength ||
+        oldDelegate.gapLength != gapLength;
   }
 }
 

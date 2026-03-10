@@ -1,7 +1,70 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+
+bool _isImageBytes(Uint8List bytes) {
+  if (bytes.length < 12) return false;
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  const png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+  var isPng = true;
+  for (var i = 0; i < png.length; i++) {
+    if (bytes[i] != png[i]) {
+      isPng = false;
+      break;
+    }
+  }
+  if (isPng) return true;
+
+  // JPEG/JFIF: FF D8 FF
+  if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) return true;
+
+  // GIF: "GIF87a" or "GIF89a"
+  if (bytes[0] == 0x47 &&
+      bytes[1] == 0x49 &&
+      bytes[2] == 0x46 &&
+      bytes[3] == 0x38 &&
+      (bytes[4] == 0x37 || bytes[4] == 0x39) &&
+      bytes[5] == 0x61) {
+    return true;
+  }
+
+  // WEBP: "RIFF" .... "WEBP"
+  if (bytes[0] == 0x52 &&
+      bytes[1] == 0x49 &&
+      bytes[2] == 0x46 &&
+      bytes[3] == 0x46 &&
+      bytes[8] == 0x57 &&
+      bytes[9] == 0x45 &&
+      bytes[10] == 0x42 &&
+      bytes[11] == 0x50) {
+    return true;
+  }
+
+  // BMP: "BM"
+  if (bytes[0] == 0x42 && bytes[1] == 0x4D) return true;
+
+  return false;
+}
+
+bool _isImageFileName(String name) {
+  final lower = name.toLowerCase();
+  return lower.endsWith('.png') ||
+      lower.endsWith('.jpg') ||
+      lower.endsWith('.jpeg') ||
+      lower.endsWith('.jfif') ||
+      lower.endsWith('.gif') ||
+      lower.endsWith('.webp') ||
+      lower.endsWith('.bmp');
+}
+
+bool _isPreviewableImage({String? fileName, Uint8List? fileBytes}) {
+  if (fileBytes != null && _isImageBytes(fileBytes)) return true;
+  if (fileName == null) return false;
+  return _isImageFileName(fileName);
+}
 
 String formatDocumentDate(DateTime date) {
   const months = [
@@ -87,17 +150,7 @@ Future<DocumentItem?> showUpsertDocumentDialog(
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setLocalState) {
-          bool _isImageFileName(String name) {
-            final lower = name.toLowerCase();
-            return lower.endsWith('.png') ||
-                lower.endsWith('.jpg') ||
-                lower.endsWith('.jpeg') ||
-                lower.endsWith('.gif') ||
-                lower.endsWith('.webp') ||
-                lower.endsWith('.bmp');
-          }
-
-          String _prettyBytes(int bytes) {
+          String prettyBytes(int bytes) {
             const units = ['B', 'KB', 'MB', 'GB'];
             var size = bytes.toDouble();
             var unitIndex = 0;
@@ -109,22 +162,47 @@ Future<DocumentItem?> showUpsertDocumentDialog(
             return '$fixed ${units[unitIndex]}';
           }
 
-          Future<void> pickFile() async {
-            final result = await FilePicker.platform.pickFiles(
-              type: FileType.any,
-              allowMultiple: false,
-              withData: true,
-            );
-            if (result == null || result.files.isEmpty) return;
+          Future<Uint8List?> resolveFileBytes(PlatformFile file) async {
+            if (file.bytes != null) return file.bytes;
+            final stream = file.readStream;
+            if (stream == null) return null;
 
-            final file = result.files.single;
-            final resolvedName = file.name.isNotEmpty ? file.name : 'selected_file';
-            setLocalState(() {
-              pickedFileName = resolvedName;
-              pickedFilePath = file.path;
-              fileBytes = file.bytes;
-              fileSizeBytes = file.size;
-            });
+            final builder = BytesBuilder(copy: false);
+            await for (final chunk in stream) {
+              builder.add(chunk);
+            }
+            return builder.takeBytes();
+          }
+
+          Future<void> pickFile() async {
+            try {
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.any,
+                allowMultiple: false,
+                withData: true,
+                withReadStream: true,
+              );
+              if (result == null || result.files.isEmpty) return;
+
+              final file = result.files.single;
+              final resolvedName = file.name.isNotEmpty ? file.name : 'selected_file';
+              final resolvedBytes = await resolveFileBytes(file);
+
+              setLocalState(() {
+                pickedFileName = resolvedName;
+                pickedFilePath = kIsWeb ? null : file.path;
+                fileBytes = resolvedBytes;
+                fileSizeBytes = file.size;
+                if (fileNameC.text.trim().isEmpty && resolvedName.trim().isNotEmpty) {
+                  fileNameC.text = resolvedName.replaceAll(RegExp(r'\\.[^.]+$'), '');
+                }
+              });
+            } catch (e) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Upload file gagal: $e')),
+              );
+            }
           }
 
           return AlertDialog(
@@ -252,7 +330,11 @@ Future<DocumentItem?> showUpsertDocumentDialog(
                           )
                         : ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: (_isImageFileName(pickedFileName!) && fileBytes != null)
+                            child: (_isPreviewableImage(
+                                      fileName: pickedFileName,
+                                      fileBytes: fileBytes,
+                                    ) &&
+                                    fileBytes != null)
                                 ? Image.memory(
                                     fileBytes!,
                                     fit: BoxFit.cover,
@@ -282,7 +364,7 @@ Future<DocumentItem?> showUpsertDocumentDialog(
                                           const SizedBox(height: 6),
                                           if (fileSizeBytes != null)
                                             Text(
-                                              _prettyBytes(fileSizeBytes!),
+                                              prettyBytes(fileSizeBytes!),
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
@@ -316,9 +398,30 @@ Future<DocumentItem?> showUpsertDocumentDialog(
                   final desc = descC.text.trim();
                   final created = createdC.text.trim();
 
-                  if (fileName.isEmpty || uploadBy.isEmpty || created.isEmpty) return;
-                  if (pickedFileName == null) return;
-                  if (fileBytes == null && pickedFilePath == null) return;
+                  if (fileName.isEmpty || uploadBy.isEmpty || created.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Mohon lengkapi File Name, Upload by, dan Create.')),
+                    );
+                    return;
+                  }
+                  if (pickedFileName == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Mohon pilih file dulu.')),
+                    );
+                    return;
+                  }
+                  if (kIsWeb && fileBytes == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Di Web, file harus dibaca sebagai bytes. Coba pilih file lagi.')),
+                    );
+                    return;
+                  }
+                  if (!kIsWeb && fileBytes == null && pickedFilePath == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('File tidak terbaca. Coba pilih file lagi.')),
+                    );
+                    return;
+                  }
 
                   final updated = isUpdate
                       ? (updatedValue ?? formatDocumentDate(DateTime.now()))
@@ -470,17 +573,7 @@ class _DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool _isImageFileName(String name) {
-      final lower = name.toLowerCase();
-      return lower.endsWith('.png') ||
-          lower.endsWith('.jpg') ||
-          lower.endsWith('.jpeg') ||
-          lower.endsWith('.gif') ||
-          lower.endsWith('.webp') ||
-          lower.endsWith('.bmp');
-    }
-
-    String _prettyBytes(int bytes) {
+    String prettyBytes(int bytes) {
       const units = ['B', 'KB', 'MB', 'GB'];
       var size = bytes.toDouble();
       var unitIndex = 0;
@@ -555,7 +648,7 @@ class _DocumentCard extends StatelessWidget {
                 height: 120,
                 width: double.infinity,
                 child: (pickedFileName != null &&
-                        _isImageFileName(pickedFileName!) &&
+                        _isPreviewableImage(fileName: pickedFileName, fileBytes: fileBytes) &&
                         fileBytes != null)
                     ? Image.memory(
                         fileBytes!,
@@ -589,7 +682,7 @@ class _DocumentCard extends StatelessWidget {
                                 if (fileSizeBytes != null) ...[
                                   const SizedBox(height: 4),
                                   Text(
-                                    _prettyBytes(fileSizeBytes!),
+                                    prettyBytes(fileSizeBytes!),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
