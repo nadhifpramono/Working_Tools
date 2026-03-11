@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'editprofile.dart';
 import '../notifications/notification.dart';
 import 'stockout.dart';
-
+import 'stockin.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -210,7 +210,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           label: 'Stock in',
                           onTap: () {
                             _popup.hide();
-                            
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const StockInPage(),
+                              ),
+                            );
                           },
                         ),
                       ],
