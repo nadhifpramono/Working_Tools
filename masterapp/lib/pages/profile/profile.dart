@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'editprofile.dart';
 import '../notifications/notification.dart';
+import 'stockout.dart';
+
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -89,9 +91,12 @@ class _ProfilePageState extends State<ProfilePage> {
                               darkMode: _darkMode,
                               pinEnabled: _pinEnabled,
                               language: _language,
-                              onDarkModeChanged: (v) => setState(() => _darkMode = v),
-                              onPinChanged: (v) => setState(() => _pinEnabled = v),
-                              onLanguageChanged: (v) => setState(() => _language = v),
+                              onDarkModeChanged: (v) =>
+                                  setState(() => _darkMode = v),
+                              onPinChanged: (v) =>
+                                  setState(() => _pinEnabled = v),
+                              onLanguageChanged: (v) =>
+                                  setState(() => _language = v),
                             );
                           },
                           borderRadius: BorderRadius.circular(12),
@@ -188,14 +193,25 @@ class _ProfilePageState extends State<ProfilePage> {
                           icon: Icons.school_outlined,
                           iconColor: Colors.black,
                           label: 'Stock out',
-                          onTap: () => _popup.hide(),
+                          onTap: () {
+                            _popup.hide();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const StockOutPage(),
+                              ),
+                            );
+                          },
                         ),
                         const _DividerLine(),
                         _MenuRow(
                           icon: Icons.inventory_2_outlined,
                           iconColor: Colors.black,
                           label: 'Stock in',
-                          onTap: () => _popup.hide(),
+                          onTap: () {
+                            _popup.hide();
+                            
+                          },
                         ),
                       ],
                     ),
@@ -224,7 +240,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(10),
                       child: Row(
                         children: [
-                          const Icon(Icons.logout, size: 18, color: Color(0xFFDC2626)),
+                          const Icon(Icons.logout,
+                              size: 18, color: Color(0xFFDC2626)),
                           const SizedBox(width: 8),
                           Text(
                             'Log Out',
@@ -474,7 +491,8 @@ class SettingsPopupController {
     final overlayBox = overlay.context.findRenderObject() as RenderBox;
 
     final targetBox = targetContext.findRenderObject() as RenderBox;
-    final targetTopLeft = targetBox.localToGlobal(Offset.zero, ancestor: overlayBox);
+    final targetTopLeft =
+        targetBox.localToGlobal(Offset.zero, ancestor: overlayBox);
     final targetSize = targetBox.size;
 
     final screenW = overlayBox.size.width;
@@ -798,7 +816,8 @@ class _RowAction extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF6B7280)),
+            const Icon(Icons.chevron_right,
+                size: 18, color: Color(0xFF6B7280)),
           ],
         ),
       ),
