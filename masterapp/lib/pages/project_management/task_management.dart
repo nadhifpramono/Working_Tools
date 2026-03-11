@@ -7,10 +7,7 @@ import 'note_management.dart';
 class TaskManagementPage extends StatefulWidget {
   final ProjectItem project;
 
-  const TaskManagementPage({
-    super.key,
-    required this.project,
-  });
+  const TaskManagementPage({super.key, required this.project});
 
   @override
   State<TaskManagementPage> createState() => _TaskManagementPageState();
@@ -27,13 +24,14 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
   final TextEditingController _searchC = TextEditingController();
 
   int _segmentIndex = 0; // 0 task, 1 note, 2 document
-  String _priorityFilter = 'Priority';
+  String _statusFilter = 'All status';
   String _deadlineFilter = 'Deadline';
 
   List<NoteItem> _notes = const [
     NoteItem(
       title: 'Meeting Safety Brief',
-      note: 'Pastikan semua pekerja menggunakan helm\n'
+      note:
+          'Pastikan semua pekerja menggunakan helm\n'
           'dan sepatu safety sebelum memasuki area\n'
           'proyek utama.',
       created: '18 Feb 2026',
@@ -183,8 +181,8 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                         hint: _segmentIndex == 0
                             ? 'Search Task'
                             : _segmentIndex == 1
-                                ? 'Search Note'
-                                : 'Search Document',
+                            ? 'Search Note'
+                            : 'Search Document',
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 12),
@@ -198,15 +196,20 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                           children: [
                             Expanded(
                               child: _FilterBox(
-                                label: _priorityFilter,
+                                label: _statusFilter,
                                 onTap: () async {
                                   final result = await _showPicker(
                                     context,
-                                    title: 'Priority',
-                                    options: const ['Priority', 'High', 'Medium', 'Low'],
+                                    title: 'All status',
+                                    options: const [
+                                      'All status',
+                                      'To do',
+                                      'In progress',
+                                      'Complecated',
+                                    ],
                                   );
                                   if (result != null) {
-                                    setState(() => _priorityFilter = result);
+                                    setState(() => _statusFilter = result);
                                   }
                                 },
                               ),
@@ -219,7 +222,11 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                                   final result = await _showPicker(
                                     context,
                                     title: 'Deadline',
-                                    options: const ['Deadline', 'Nearest', 'Farthest'],
+                                    options: const [
+                                      'Deadline',
+                                      'Nearest',
+                                      'Farthest',
+                                    ],
                                   );
                                   if (result != null) {
                                     setState(() => _deadlineFilter = result);
@@ -270,8 +277,8 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                 label: _segmentIndex == 0
                     ? 'Add Task'
                     : _segmentIndex == 1
-                        ? 'Add Note'
-                        : 'Add Doc',
+                    ? 'Add Note'
+                    : 'Add Doc',
                 onTap: () async {
                   if (_segmentIndex == 0) {
                     final task = await _showAddTaskDialog(context);
@@ -303,14 +310,20 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
     final q = _searchC.text.trim().toLowerCase();
 
     final items = _tasks.where((task) {
-      final matchSearch = q.isEmpty ||
+      final matchSearch =
+          q.isEmpty ||
           task.title.toLowerCase().contains(q) ||
           task.subtitle.toLowerCase().contains(q);
 
-      final matchPriority =
-          _priorityFilter == 'Priority' || task.priority == _priorityFilter;
+      final matchStatus =
+          _statusFilter == 'All status' ||
+          (_statusFilter == 'To do' && task.status == _TaskStatus.toDo) ||
+          (_statusFilter == 'In progress' &&
+              task.status == _TaskStatus.inProgress) ||
+          ((_statusFilter == 'Complecated' || _statusFilter == 'Completed') &&
+              task.status == _TaskStatus.complecated);
 
-      return matchSearch && matchPriority;
+      return matchSearch && matchStatus;
     }).toList();
 
     if (_deadlineFilter == 'Nearest') {
@@ -426,7 +439,10 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                       ),
                       items: const [
                         DropdownMenuItem(value: 'High', child: Text('High')),
-                        DropdownMenuItem(value: 'Medium', child: Text('Medium')),
+                        DropdownMenuItem(
+                          value: 'Medium',
+                          child: Text('Medium'),
+                        ),
                         DropdownMenuItem(value: 'Low', child: Text('Low')),
                       ],
                       onChanged: (v) {
@@ -460,7 +476,9 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                   _TaskItem(
                     title: titleC.text.trim(),
                     subtitle: subC.text.trim().isEmpty ? '-' : subC.text.trim(),
-                    deadline: deadlineC.text.trim().isEmpty ? '-' : deadlineC.text.trim(),
+                    deadline: deadlineC.text.trim().isEmpty
+                        ? '-'
+                        : deadlineC.text.trim(),
                     priority: priority,
                     assignees: const ['RA', 'FN', 'BK', 'DK'],
                     status: _TaskStatus.toDo,
@@ -518,7 +536,10 @@ class _TopBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
           ),
           Expanded(
             child: Center(
@@ -601,10 +622,7 @@ class _SegmentBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onChanged;
 
-  const _SegmentBar({
-    required this.currentIndex,
-    required this.onChanged,
-  });
+  const _SegmentBar({required this.currentIndex, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -646,7 +664,9 @@ class _SegmentBar extends StatelessWidget {
                 child: Text(
                   items[index],
                   style: TextStyle(
-                    color: active ? Colors.white : _TaskManagementPageState.TEXT,
+                    color: active
+                        ? Colors.white
+                        : _TaskManagementPageState.TEXT,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -664,10 +684,7 @@ class _FilterBox extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _FilterBox({
-    required this.label,
-    required this.onTap,
-  });
+  const _FilterBox({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -705,10 +722,7 @@ class _TaskCard extends StatelessWidget {
   final _TaskItem item;
   final ValueChanged<_TaskStatus> onStatusChanged;
 
-  const _TaskCard({
-    required this.item,
-    required this.onStatusChanged,
-  });
+  const _TaskCard({required this.item, required this.onStatusChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -783,7 +797,11 @@ class _TaskCard extends StatelessWidget {
               const SizedBox(width: 8),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 14, color: _TaskManagementPageState.MUTED),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 14,
+                    color: _TaskManagementPageState.MUTED,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     item.deadline,
@@ -803,11 +821,7 @@ class _TaskCard extends StatelessWidget {
   }
 }
 
-enum _TaskStatus {
-  toDo,
-  inProgress,
-  complecated,
-}
+enum _TaskStatus { toDo, inProgress, complecated }
 
 extension _TaskStatusX on _TaskStatus {
   String get label {
@@ -817,7 +831,7 @@ extension _TaskStatusX on _TaskStatus {
       case _TaskStatus.inProgress:
         return 'In progress';
       case _TaskStatus.complecated:
-        return 'Completed';
+        return 'Complecated';
     }
   }
 
@@ -837,10 +851,7 @@ class _StatusPicker extends StatelessWidget {
   final _TaskStatus value;
   final ValueChanged<_TaskStatus> onChanged;
 
-  const _StatusPicker({
-    required this.value,
-    required this.onChanged,
-  });
+  const _StatusPicker({required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -856,7 +867,10 @@ class _StatusPicker extends StatelessWidget {
                   children: [
                     _StatusIcon(status: s, size: 18),
                     const SizedBox(width: 10),
-                    Text(s.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      s.label,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ],
                 ),
               ),
@@ -868,7 +882,10 @@ class _StatusPicker extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _TaskManagementPageState.MUTED.withOpacity(0.35), width: 1.2),
+          border: Border.all(
+            color: _TaskManagementPageState.MUTED.withOpacity(0.35),
+            width: 1.2,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -884,7 +901,11 @@ class _StatusPicker extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.expand_more, size: 18, color: _TaskManagementPageState.MUTED),
+            const Icon(
+              Icons.expand_more,
+              size: 18,
+              color: _TaskManagementPageState.MUTED,
+            ),
           ],
         ),
       ),
@@ -896,10 +917,7 @@ class _StatusIcon extends StatelessWidget {
   final _TaskStatus status;
   final double size;
 
-  const _StatusIcon({
-    required this.status,
-    required this.size,
-  });
+  const _StatusIcon({required this.status, required this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -1064,10 +1082,7 @@ class _AddActionButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _AddActionButton({
-    required this.label,
-    required this.onTap,
-  });
+  const _AddActionButton({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1134,9 +1149,7 @@ class _InputField extends StatelessWidget {
         labelText: label,
         hintText: hint,
         isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -1146,10 +1159,7 @@ class _EmptySection extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _EmptySection({
-    required this.title,
-    required this.subtitle,
-  });
+  const _EmptySection({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -1161,10 +1171,7 @@ class _EmptySection extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           Text(

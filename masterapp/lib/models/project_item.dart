@@ -3,6 +3,7 @@ class ProjectItem {
   final String subtitle;
   final double progress; // 0..1
   final String status;
+  final String priority;
   final int totalTask;
   final int doneTask;
   final String deadline;
@@ -12,9 +13,9 @@ class ProjectItem {
     required this.subtitle,
     required this.progress,
     required this.status,
+    required this.priority,
     required this.totalTask,
     required this.doneTask,
     required this.deadline,
   });
 }
-
