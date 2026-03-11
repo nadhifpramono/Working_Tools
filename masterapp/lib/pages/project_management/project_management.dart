@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'task_management.dart';
+import '../../models/project_item.dart';
+
 class ProjectManagementPage extends StatefulWidget {
   const ProjectManagementPage({super.key});
 
@@ -16,7 +19,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
   static const Color MUTED = Color(0xFF6B7280);
   static const Color TRACK = Color(0xFFC5C5C5);
 
-  String _statusFilter = 'All Status';
+  String _priorityFilter = 'Priority';
   String _sortFilter = 'Deadline';
   final TextEditingController _searchC = TextEditingController();
 
@@ -26,6 +29,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
       subtitle: 'Membenarkan Plafon yang rusak',
       progress: 0.90,
       status: 'In Progress',
+      priority: 'High',
       totalTask: 12,
       doneTask: 10,
       deadline: '25 Feb 2026',
@@ -35,6 +39,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
       subtitle: 'Membuat Aplikasi Mobile',
       progress: 0.75,
       status: 'In Progress',
+      priority: 'Medium',
       totalTask: 10,
       doneTask: 7,
       deadline: '25 Mar 2026',
@@ -44,6 +49,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
       subtitle: 'Membenarkan Genteng Rusak',
       progress: 0.50,
       status: 'To Do',
+      priority: 'Low',
       totalTask: 5,
       doneTask: 1,
       deadline: '25 Juni 2026',
@@ -82,7 +88,12 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                 // CONTENT
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, bottomSafePad),
+                    padding: const EdgeInsets.fromLTRB(
+                      16,
+                      12,
+                      16,
+                      bottomSafePad,
+                    ),
                     children: [
                       _SearchBox(
                         controller: _searchC,
@@ -94,15 +105,21 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                         children: [
                           Expanded(
                             child: _FilterButton(
-                              label: _statusFilter,
+                              label: _priorityFilter,
                               onTap: () async {
                                 final v = await _pickOption(
                                   context,
-                                  title: 'Status',
-                                  options: const ['All Status', 'In Progress', 'To Do', 'Done'],
-                                  selected: _statusFilter,
+                                  title: 'Priority',
+                                  options: const [
+                                    'Priority',
+                                    'Low',
+                                    'Medium',
+                                    'High',
+                                  ],
+                                  selected: _priorityFilter,
                                 );
-                                if (v != null) setState(() => _statusFilter = v);
+                                if (v != null)
+                                  setState(() => _priorityFilter = v);
                               },
                             ),
                           ),
@@ -114,7 +131,11 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                                 final v = await _pickOption(
                                   context,
                                   title: 'Sort',
-                                  options: const ['Deadline', 'Progress', 'A-Z'],
+                                  options: const [
+                                    'Deadline',
+                                    'Progress',
+                                    'A-Z',
+                                  ],
                                   selected: _sortFilter,
                                 );
                                 if (v != null) setState(() => _sortFilter = v);
@@ -129,11 +150,26 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                       ..._filteredAndSorted().map(
                         (p) => Padding(
                           padding: const EdgeInsets.only(bottom: 14),
-                          child: ProjectCard(
-                            item: p,
-                            navy: NAVY,
-                            border: const Color(0xFFE2E0E0),
-                            track: TRACK,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        TaskManagementPage(project: p),
+                                  ),
+                                );
+                              },
+                              child: ProjectCard(
+                                item: p,
+                                navy: NAVY,
+                                border: const Color(0xFFE2E0E0),
+                                track: TRACK,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -148,10 +184,10 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
               right: 16,
               bottom: 16,
               child: _NewProjectButton(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('New Project clicked')),
-                  );
+                onTap: () async {
+                  final project = await _showAddProjectDialog(context);
+                  if (project == null) return;
+                  setState(() => _items.insert(0, project));
                 },
               ),
             ),
@@ -165,14 +201,15 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
     final q = _searchC.text.trim().toLowerCase();
 
     var list = _items.where((p) {
-      final matchSearch = q.isEmpty ||
+      final matchSearch =
+          q.isEmpty ||
           p.title.toLowerCase().contains(q) ||
           p.subtitle.toLowerCase().contains(q);
 
-      final matchStatus =
-          (_statusFilter == 'All Status') || (p.status == _statusFilter);
+      final matchPriority =
+          (_priorityFilter == 'Priority') || (p.priority == _priorityFilter);
 
-      return matchSearch && matchStatus;
+      return matchSearch && matchPriority;
     }).toList();
 
     if (_sortFilter == 'Progress') {
@@ -248,6 +285,223 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
       },
     );
   }
+
+  Future<ProjectItem?> _showAddProjectDialog(BuildContext context) {
+    final titleC = TextEditingController();
+    final descC = TextEditingController();
+    final deadlineC = TextEditingController(text: '25 Mar 2026');
+    final totalTaskC = TextEditingController(text: '1');
+    final doneTaskC = TextEditingController(text: '0');
+
+    String priority = 'Medium';
+    String? errorText;
+
+    return showDialog<ProjectItem>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setLocal) {
+            final total = int.tryParse(totalTaskC.text.trim()) ?? 0;
+            final done = int.tryParse(doneTaskC.text.trim()) ?? 0;
+
+            final safeTotal = total < 0 ? 0 : total;
+            final safeDone = done < 0 ? 0 : done;
+            final clampedDone = safeTotal <= 0
+                ? 0
+                : safeDone.clamp(0, safeTotal);
+            final progress = safeTotal <= 0 ? 0.0 : (clampedDone / safeTotal);
+
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              title: const Text(
+                'New Project',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleC,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setLocal(() => errorText = null),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: descC,
+                      decoration: const InputDecoration(
+                        labelText: 'Description',
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setLocal(() => errorText = null),
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      value: priority,
+                      decoration: const InputDecoration(
+                        labelText: 'Priority',
+                        isDense: true,
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'Low', child: Text('Low')),
+                        DropdownMenuItem(
+                          value: 'Medium',
+                          child: Text('Medium'),
+                        ),
+                        DropdownMenuItem(value: 'High', child: Text('High')),
+                      ],
+                      onChanged: (v) {
+                        if (v == null) return;
+                        setLocal(() {
+                          priority = v;
+                          errorText = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: deadlineC,
+                      decoration: const InputDecoration(
+                        labelText: 'Tanggal (Deadline)',
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setLocal(() => errorText = null),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: totalTaskC,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Total Task',
+                              isDense: true,
+                            ),
+                            onChanged: (_) => setLocal(() => errorText = null),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: doneTaskC,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Task Done',
+                              isDense: true,
+                            ),
+                            onChanged: (_) => setLocal(() => errorText = null),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Progress: ${(progress * 100).round()}%',
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          errorText!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: NAVY,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    final title = titleC.text.trim();
+                    final desc = descC.text.trim();
+                    final deadline = deadlineC.text.trim();
+                    final totalValue =
+                        int.tryParse(totalTaskC.text.trim()) ?? 0;
+                    final doneValue = int.tryParse(doneTaskC.text.trim()) ?? 0;
+
+                    if (title.isEmpty) {
+                      setLocal(() => errorText = 'Title wajib diisi.');
+                      return;
+                    }
+                    if (totalValue <= 0) {
+                      setLocal(() => errorText = 'Total Task minimal 1.');
+                      return;
+                    }
+                    if (doneValue < 0 || doneValue > totalValue) {
+                      setLocal(() {
+                        errorText = 'Task Done harus 0 sampai Total Task.';
+                      });
+                      return;
+                    }
+
+                    final progressValue = (doneValue / totalValue).clamp(
+                      0.0,
+                      1.0,
+                    );
+                    final status = doneValue == 0
+                        ? 'To Do'
+                        : doneValue == totalValue
+                        ? 'Done'
+                        : 'In Progress';
+
+                    Navigator.pop(
+                      context,
+                      ProjectItem(
+                        title: title,
+                        subtitle: desc.isEmpty ? '-' : desc,
+                        progress: progressValue,
+                        status: status,
+                        priority: priority,
+                        totalTask: totalValue,
+                        doneTask: doneValue,
+                        deadline: deadline.isEmpty ? '-' : deadline,
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Create',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      titleC.dispose();
+      descC.dispose();
+      deadlineC.dispose();
+      totalTaskC.dispose();
+      doneTaskC.dispose();
+    });
+  }
 }
 
 // ===================== UI COMPONENTS =====================
@@ -307,10 +561,7 @@ class _SearchBox extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
 
-  const _SearchBox({
-    required this.controller,
-    required this.onChanged,
-  });
+  const _SearchBox({required this.controller, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +577,7 @@ class _SearchBox extends StatelessWidget {
             color: Color(0x33000000),
             blurRadius: 4,
             offset: Offset(0, 3),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -342,10 +593,7 @@ class _SearchBox extends StatelessWidget {
                 border: InputBorder.none,
                 isDense: true,
               ),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -358,10 +606,7 @@ class _FilterButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _FilterButton({
-    required this.label,
-    required this.onTap,
-  });
+  const _FilterButton({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -470,7 +715,7 @@ class ProjectCard extends StatelessWidget {
             color: Color(0x14000000),
             blurRadius: 18,
             offset: Offset(0, 10),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -486,7 +731,10 @@ class ProjectCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFDCECFF)),
                 ),
-                child: const Icon(Icons.folder_rounded, color: Color(0xFF101D6E)),
+                child: const Icon(
+                  Icons.folder_rounded,
+                  color: Color(0xFF101D6E),
+                ),
               ),
               const SizedBox(width: 12),
 
@@ -570,7 +818,7 @@ class ProjectCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Status : ${item.status}',
+                      'Priority : ${item.priority}',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -607,23 +855,3 @@ class ProjectCard extends StatelessWidget {
 }
 
 // ===================== MODEL =====================
-
-class ProjectItem {
-  final String title;
-  final String subtitle;
-  final double progress; // 0..1
-  final String status;
-  final int totalTask;
-  final int doneTask;
-  final String deadline;
-
-  const ProjectItem({
-    required this.title,
-    required this.subtitle,
-    required this.progress,
-    required this.status,
-    required this.totalTask,
-    required this.doneTask,
-    required this.deadline,
-  });
-}

@@ -21,7 +21,7 @@ class _NotificationPageState extends State<NotificationPage> {
   static const Color blueLine = Color(0xFF2F6BFF);
 
   int _selectedTab = 1;
-  int _bottomIndex = 0;
+  final int _bottomIndex = 0;
 
   final List<String> _tabs = const [
     "Semua",

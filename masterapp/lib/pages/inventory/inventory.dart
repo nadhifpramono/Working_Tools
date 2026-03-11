@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 
 class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
