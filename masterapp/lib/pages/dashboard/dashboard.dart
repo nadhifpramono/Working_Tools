@@ -227,7 +227,17 @@ class _DashboardHomeBody extends StatelessWidget {
                           icon: Icons.description_outlined,
                           bg: SOFT,
                           border: BORDER,
-                          onTap: () {},
+                          onTap: () {
+                            popup.hide();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ProjectManagementPage(
+                                  openFilesOnSelect: true,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         _MenuTile(
                           label: 'project management',

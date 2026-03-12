@@ -4,7 +4,9 @@ import 'task_management.dart';
 import '../../models/project_item.dart';
 
 class ProjectManagementPage extends StatefulWidget {
-  const ProjectManagementPage({super.key});
+  final bool openFilesOnSelect;
+
+  const ProjectManagementPage({super.key, this.openFilesOnSelect = false});
 
   @override
   State<ProjectManagementPage> createState() => _ProjectManagementPageState();
@@ -158,8 +160,11 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        TaskManagementPage(project: p),
+                                    builder: (_) => TaskManagementPage(
+                                      project: p,
+                                      initialSegmentIndex:
+                                          widget.openFilesOnSelect ? 3 : 0,
+                                    ),
                                   ),
                                 );
                               },
