@@ -14,13 +14,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  static const Color NAVY = Color(0xFF101D6E);
-  static const Color BG = Color(0xFFF2F9FF);
-  static const Color CARD = Color(0xFFFAFEFF);
-  static const Color SOFT = Color(0xFFF4F5FF);
-  static const Color BORDER = Color(0xFFDCECFF);
-  static const Color TEXT = Color(0xFF111827);
-  static const Color MUTED = Color(0xFF6B7280);
+  static const Color bg = Color(0xFFF2F9FF);
 
   int _navIndex = 0;
 
@@ -50,7 +44,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BG,
+      backgroundColor: bg,
       body: IndexedStack(
         index: _navIndex,
         children: [
@@ -106,12 +100,11 @@ class _DashboardHomeBody extends StatelessWidget {
     required this.onTapNotification,
   });
 
-  static const Color NAVY = Color(0xFF101D6E);
-  static const Color BG = Color(0xFFF2F9FF);
-  static const Color CARD = Color(0xFFFAFEFF);
-  static const Color SOFT = Color(0xFFF4F5FF);
-  static const Color BORDER = Color(0xFFDCECFF);
-  static const Color TEXT = Color(0xFF111827);
+  static const Color navy = Color(0xFF101D6E);
+  static const Color card = Color(0xFFFAFEFF);
+  static const Color soft = Color(0xFFF4F5FF);
+  static const Color border = Color(0xFFDCECFF);
+  static const Color text = Color(0xFF111827);
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +120,7 @@ class _DashboardHomeBody extends StatelessWidget {
           SliverToBoxAdapter(
             child: Container(
               height: isTablet ? 90 : 80,
-              decoration: const BoxDecoration(color: NAVY),
+              decoration: const BoxDecoration(color: navy),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
@@ -178,8 +171,8 @@ class _DashboardHomeBody extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
-                  _ProfileCard(
-                    cardColor: CARD,
+                  _DashboardProfileCard(
+                    cardColor: card,
                     borderColor: const Color(0xFFE2E0E0),
                     name: 'Hanyakra Narendra',
                     role: 'Supervisor',
@@ -198,7 +191,7 @@ class _DashboardHomeBody extends StatelessWidget {
                           return _QuickButton(
                             width: itemW,
                             height: itemH,
-                            color: NAVY,
+                            color: navy,
                             onTap: () {},
                           );
                         }),
@@ -225,15 +218,15 @@ class _DashboardHomeBody extends StatelessWidget {
                         _MenuTile(
                           label: 'file manager',
                           icon: Icons.description_outlined,
-                          bg: SOFT,
-                          border: BORDER,
+                          bg: soft,
+                          border: border,
                           onTap: () {},
                         ),
                         _MenuTile(
                           label: 'project management',
                           icon: Icons.assignment_outlined,
-                          bg: SOFT,
-                          border: BORDER,
+                          bg: soft,
+                          border: border,
                           onTap: () {
                             popup.hide();
                             Navigator.push(
@@ -247,8 +240,8 @@ class _DashboardHomeBody extends StatelessWidget {
                         _MenuTile(
                           label: 'inventory',
                           icon: Icons.inventory_2_outlined,
-                          bg: SOFT,
-                          border: BORDER,
+                          bg: soft,
+                          border: border,
                           onTap: () {
                             popup.hide();
                             Navigator.push(
@@ -262,22 +255,22 @@ class _DashboardHomeBody extends StatelessWidget {
                         _MenuTile(
                           label: 'notes',
                           icon: Icons.event_note_outlined,
-                          bg: SOFT,
-                          border: BORDER,
+                          bg: soft,
+                          border: border,
                           onTap: () {},
                         ),
                         _MenuTile(
                           label: 'finance',
                           icon: Icons.account_balance_wallet_outlined,
-                          bg: SOFT,
-                          border: BORDER,
+                          bg: soft,
+                          border: border,
                           onTap: () {},
                         ),
                         _MenuTile(
                           label: 'service all',
                           icon: Icons.grid_view_rounded,
-                          bg: SOFT,
-                          border: BORDER,
+                          bg: soft,
+                          border: border,
                           onTap: () {},
                         ),
                       ],
@@ -289,13 +282,13 @@ class _DashboardHomeBody extends StatelessWidget {
                     style: TextStyle(
                       fontSize: isTablet ? 22 : 18,
                       fontWeight: FontWeight.w700,
-                      color: TEXT,
+                      color: text,
                     ),
                   ),
                   const SizedBox(height: 10),
                   _ActivityCard(
-                    bg: SOFT,
-                    border: BORDER,
+                    bg: soft,
+                    border: border,
                     items: const [
                       _ActivityItemData(
                         title: 'Safety inspection Completed',
@@ -332,14 +325,14 @@ class _DashboardHomeBody extends StatelessWidget {
   }
 }
 
-class _ProfileCard extends StatelessWidget {
+class _DashboardProfileCard extends StatelessWidget {
   final Color cardColor;
   final Color borderColor;
   final String name;
   final String role;
   final VoidCallback onTap;
 
-  const _ProfileCard({
+  const _DashboardProfileCard({
     required this.cardColor,
     required this.borderColor,
     required this.name,
@@ -370,7 +363,8 @@ class _ProfileCard extends StatelessWidget {
             children: [
               const CircleAvatar(
                 radius: 26,
-                backgroundImage: NetworkImage("https://placehold.co/120x120"),
+                backgroundColor: Color(0xFFEFEFEF),
+                child: Icon(Icons.person_outline, color: Colors.black54),
               ),
               const SizedBox(width: 12),
               Expanded(

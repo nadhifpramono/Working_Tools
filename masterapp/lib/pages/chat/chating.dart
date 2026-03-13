@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+﻿﻿import 'package:flutter/material.dart';
 import 'negochat.dart';
-
 class ChatMessage {
   final String text;
   final bool isMe;
@@ -87,11 +86,13 @@ class _ChatingPageState extends State<ChatingPage> {
   }
 
   void _openPlusMenu() {
-    showModalBottomSheet(
-      context: context,
+    final pageContext = context;
+
+    showModalBottomSheet<void>(
+      context: pageContext,
       backgroundColor: Colors.transparent,
       isScrollControlled: false,
-      builder: (context) {
+      builder: (sheetContext) {
         return Container(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           decoration: const BoxDecoration(
@@ -133,9 +134,9 @@ class _ChatingPageState extends State<ChatingPage> {
                         color: const Color(0xFFE8F1FF),
                         iconColor: const Color(0xFF2563EB),
                         onTap: () {
-                          Navigator.pop(context);
+                          Navigator.pop(sheetContext);
                           _addSystemLikeMessage('📷 Mengirim foto...');
-                          ScaffoldMessenger.of(this.context).showSnackBar(
+                          ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Fitur kirim foto dipilih'),
                             ),
@@ -151,9 +152,9 @@ class _ChatingPageState extends State<ChatingPage> {
                         color: const Color(0xFFFFF4E5),
                         iconColor: const Color(0xFFF59E0B),
                         onTap: () {
-                          Navigator.pop(context);
+                          Navigator.pop(sheetContext);
                           _addSystemLikeMessage('📁 Mengirim folder...');
-                          ScaffoldMessenger.of(this.context).showSnackBar(
+                          ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Fitur kirim folder dipilih'),
                             ),
@@ -166,15 +167,22 @@ class _ChatingPageState extends State<ChatingPage> {
                       child: _ActionMenuCard(
                         icon: Icons.handshake_rounded,
                         label: 'Nego Harga',
-                        color: const Color(0xFFF4E8FF),
-                        iconColor: const Color(0xFF7C3AED),
+                        color: const Color(0xFFE8EEFF),
+                        iconColor: navy,
                         onTap: () async {
-                          Navigator.pop(context);
+                          Navigator.pop(sheetContext);
+
+                          await Future<void>.delayed(
+                            const Duration(milliseconds: 150),
+                          );
+
+                          if (!pageContext.mounted) return;
 
                           await NegoChatPopup.show(
-                            this.context,
+                            pageContext,
                             title: 'Jaket Varsity Custom',
-                            subtitle: 'Order 100 pcs • Negosiasi dengan ${widget.chatName}',
+                            subtitle:
+                                'Order 100 pcs • Negosiasi dengan ${widget.chatName}',
                             initialPrice: 1500000,
                             offeredPrice: 1350000,
                           );
@@ -191,11 +199,23 @@ class _ChatingPageState extends State<ChatingPage> {
     );
   }
 
+  ImageProvider? _buildAvatarProvider(String value) {
+    if (value.isEmpty) return null;
+
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return NetworkImage(value);
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     final maxContent = w > 420 ? 420.0 : w;
     final padH = (w - maxContent) / 2;
+
+    final avatarProvider = _buildAvatarProvider(widget.avatarUrl);
 
     return Scaffold(
       backgroundColor: bg,
@@ -220,7 +240,7 @@ class _ChatingPageState extends State<ChatingPage> {
                     onPressed: () {},
                     icon: const Icon(
                       Icons.notifications,
-                      color: Colors.black,
+                      color: Colors.white,
                       size: 20,
                     ),
                   ),
@@ -234,7 +254,6 @@ class _ChatingPageState extends State<ChatingPage> {
                 ],
               ),
             ),
-
             Padding(
               padding: EdgeInsets.fromLTRB(16 + padH, 12, 16 + padH, 0),
               child: Container(
@@ -252,10 +271,8 @@ class _ChatingPageState extends State<ChatingPage> {
                     CircleAvatar(
                       radius: 22,
                       backgroundColor: const Color(0xFFEFEFEF),
-                      backgroundImage: widget.avatarUrl.isNotEmpty
-                          ? NetworkImage(widget.avatarUrl)
-                          : null,
-                      child: widget.avatarUrl.isEmpty
+                      backgroundImage: avatarProvider,
+                      child: avatarProvider == null
                           ? Icon(
                               widget.isGroup
                                   ? Icons.group_outlined
@@ -303,9 +320,7 @@ class _ChatingPageState extends State<ChatingPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
               decoration: BoxDecoration(
@@ -320,9 +335,7 @@ class _ChatingPageState extends State<ChatingPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 10),
-
             Expanded(
               child: ListView.builder(
                 controller: _scrollC,
@@ -337,7 +350,6 @@ class _ChatingPageState extends State<ChatingPage> {
                 },
               ),
             ),
-
             Padding(
               padding: EdgeInsets.fromLTRB(6 + padH, 8, 6 + padH, 10),
               child: Row(
@@ -352,7 +364,6 @@ class _ChatingPageState extends State<ChatingPage> {
                       child: Row(
                         children: [
                           const SizedBox(width: 8),
-
                           InkWell(
                             onTap: _openPlusMenu,
                             borderRadius: BorderRadius.circular(30),
@@ -370,16 +381,12 @@ class _ChatingPageState extends State<ChatingPage> {
                               ),
                             ),
                           ),
-
                           const SizedBox(width: 10),
-
                           const Icon(
                             Icons.emoji_emotions_outlined,
                             color: Colors.black54,
                           ),
-
                           const SizedBox(width: 10),
-
                           Expanded(
                             child: TextField(
                               controller: _messageC,
