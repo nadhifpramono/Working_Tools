@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'chating.dart';
 import '../notifications/notification.dart';
 
@@ -10,16 +10,16 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  static const Color NAVY = Color(0xFF101D6E);
-  static const Color BG = Color(0xFFF7F7FB);
-  static const Color CARD = Color(0xFFFFFFFF);
-  static const Color SOFT = Color(0xFFEBEDFF);
-  static const Color DELETE_BG = Color(0xFFFFE7E5);
-  static const Color BORDER = Color(0xFFE6E6E6);
-  static const Color TEXT = Color(0xFF010101);
-  static const Color MUTED = Color(0xFF3C3C3C);
-  static const Color PURPLE = Color(0xFF6B257F);
-  static const Color BLUE_BADGE = Color(0xFF3641B7);
+  static const Color navy = Color(0xFF101D6E);
+  static const Color bg = Color(0xFFF7F7FB);
+  static const Color card = Color(0xFFFFFFFF);
+  static const Color soft = Color(0xFFEBEDFF);
+  static const Color deleteBg = Color(0xFFFFE7E5);
+  static const Color border = Color(0xFFE6E6E6);
+  static const Color text = Color(0xFF010101);
+  static const Color muted = Color(0xFF3C3C3C);
+  static const Color purple = navy;
+  static const Color blueBadge = Color(0xFF3641B7);
 
   int _segment = 1;
   final TextEditingController _searchC = TextEditingController();
@@ -30,7 +30,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "online",
       lastMessage: "Have a good one!",
       time: "3:02 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: true,
       messages: const [
@@ -43,7 +43,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "offline",
       lastMessage: "Hello! Are you available for toni...",
       time: "2:58 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 2,
       verified: false,
       messages: const [
@@ -55,7 +55,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "online",
       lastMessage: "I’m not gonna pay you.",
       time: "2:46 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: true,
       highlighted: true,
@@ -68,7 +68,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "online",
       lastMessage: "Good bye!",
       time: "2:41 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: true,
       messages: const [
@@ -80,7 +80,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "online",
       lastMessage: "See you again!",
       time: "2:27 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: true,
       messages: const [
@@ -92,7 +92,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "offline",
       lastMessage: "Okay, Thank you!",
       time: "2:16 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: false,
       messages: const [
@@ -107,7 +107,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "8 anggota",
       lastMessage: "Diskusi umum grup...",
       time: "4:10 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: false,
       messages: const [
@@ -120,7 +120,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "12 anggota",
       lastMessage: "Update progress hari ini...",
       time: "3:40 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 3,
       verified: false,
       messages: const [
@@ -132,7 +132,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "5 anggota",
       lastMessage: "Revisi dokumen sudah diupload",
       time: "3:05 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: false,
       messages: const [
@@ -144,7 +144,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "6 anggota",
       lastMessage: "Meeting jam 5 sore ya",
       time: "2:30 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 1,
       verified: false,
       messages: const [
@@ -156,7 +156,7 @@ class _ChatPageState extends State<ChatPage> {
       roleOrStatus: "9 anggota",
       lastMessage: "Checklist task minggu ini",
       time: "1:55 PM",
-      avatarUrl: "https://placehold.co/80x80",
+      avatarUrl: "",
       unread: 0,
       verified: false,
       messages: const [
@@ -203,7 +203,7 @@ class _ChatPageState extends State<ChatPage> {
     final listData = (_segment == 0) ? _items : _groups;
 
     return Container(
-      color: BG,
+      color: bg,
       child: SafeArea(
         child: Column(
           children: [
@@ -222,10 +222,10 @@ class _ChatPageState extends State<ChatPage> {
                 child: Column(
                   children: [
                     const SizedBox(height: 12),
-                    const _ProfileCard(
+                    const _ChatProfileCard(
                       name: "Hanyaka Narendra",
                       role: "Supervisor",
-                      avatarUrl: "https://placehold.co/120x120",
+                      avatarUrl: "",
                     ),
                     const SizedBox(height: 12),
                     _Segmented(
@@ -253,13 +253,15 @@ class _ChatPageState extends State<ChatPage> {
                           return _SwipeTile(
                             key: ValueKey("${item.name}-$i-$_segment"),
                             item: item,
-                            borderColor: item.highlighted ? BLUE_BADGE : BORDER,
+                            borderColor: item.highlighted ? blueBadge : border,
                             onTap: () {
                               _openChat(item, isGroup: _segment == 1);
                             },
                             onArchive: () {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Archived: ${item.name}")),
+                                SnackBar(
+                                  content: Text("Archived: ${item.name}"),
+                                ),
                               );
                             },
                             onDelete: () {
@@ -295,8 +297,6 @@ class _TopBarNavy extends StatelessWidget {
     required this.onBell,
   });
 
-  static const Color NAVY = _ChatPageState.NAVY;
-
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
@@ -304,7 +304,7 @@ class _TopBarNavy extends StatelessWidget {
 
     return Container(
       height: isTablet ? 90 : 80,
-      decoration: const BoxDecoration(color: NAVY),
+      decoration: const BoxDecoration(color: _ChatPageState.navy),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
@@ -334,19 +334,29 @@ class _TopBarNavy extends StatelessWidget {
   }
 }
 
-class _ProfileCard extends StatelessWidget {
+class _ChatProfileCard extends StatelessWidget {
   final String name;
   final String role;
   final String avatarUrl;
 
-  const _ProfileCard({
+  const _ChatProfileCard({
     required this.name,
     required this.role,
     required this.avatarUrl,
   });
 
+  ImageProvider? _avatarProvider() {
+    if (avatarUrl.isEmpty) return null;
+    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+      return NetworkImage(avatarUrl);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final image = _avatarProvider();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -367,8 +377,11 @@ class _ProfileCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundImage: NetworkImage(avatarUrl),
               backgroundColor: const Color(0xFFEFEFEF),
+              backgroundImage: image,
+              child: image == null
+                  ? const Icon(Icons.person_outline, color: Colors.black54)
+                  : null,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -415,8 +428,6 @@ class _Segmented extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const navy = _ChatPageState.NAVY;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -426,7 +437,7 @@ class _Segmented extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment(0.05, 0.10),
             end: Alignment(1.27, 1.27),
-            colors: [navy, Color(0x3FEBD4F3)],
+            colors: [_ChatPageState.navy, Color(0x3FEBD4F3)],
           ),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -539,12 +550,12 @@ class _SearchRow extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 6, vertical: 10),
               child: Row(
                 children: [
-                  Icon(Icons.add, size: 16, color: _ChatPageState.PURPLE),
+                  Icon(Icons.add, size: 16, color: _ChatPageState.purple),
                   SizedBox(width: 4),
                   Text(
                     "New message",
                     style: TextStyle(
-                      color: _ChatPageState.PURPLE,
+                      color: _ChatPageState.purple,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -575,8 +586,19 @@ class _SwipeTile extends StatelessWidget {
     required this.onDelete,
   });
 
+  ImageProvider? _avatarProvider() {
+    if (item.avatarUrl.isEmpty) return null;
+    if (item.avatarUrl.startsWith('http://') ||
+        item.avatarUrl.startsWith('https://')) {
+      return NetworkImage(item.avatarUrl);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final image = _avatarProvider();
+
     return Dismissible(
       key: key!,
       direction: DismissDirection.horizontal,
@@ -588,13 +610,13 @@ class _SwipeTile extends StatelessWidget {
         return true;
       },
       onDismissed: (_) => onDelete(),
-      background: _ActionBG(
-        color: _ChatPageState.SOFT,
+      background: const _ActionBG(
+        color: _ChatPageState.soft,
         icon: Icons.folder_open,
         alignLeft: true,
       ),
-      secondaryBackground: _ActionBG(
-        color: _ChatPageState.DELETE_BG,
+      secondaryBackground: const _ActionBG(
+        color: _ChatPageState.deleteBg,
         icon: Icons.delete_outline,
         alignLeft: false,
       ),
@@ -607,7 +629,7 @@ class _SwipeTile extends StatelessWidget {
             height: 70,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: _ChatPageState.CARD,
+              color: _ChatPageState.card,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor, width: 1),
               boxShadow: const [
@@ -622,8 +644,11 @@ class _SwipeTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundImage: NetworkImage(item.avatarUrl),
                   backgroundColor: const Color(0xFFEFEFEF),
+                  backgroundImage: image,
+                  child: image == null
+                      ? const Icon(Icons.person_outline, color: Colors.black54)
+                      : null,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -636,7 +661,7 @@ class _SwipeTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: _ChatPageState.TEXT,
+                          color: _ChatPageState.text,
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                         ),
@@ -653,7 +678,7 @@ class _SwipeTile extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: _ChatPageState.MUTED,
+                                color: _ChatPageState.muted,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -684,7 +709,7 @@ class _SwipeTile extends StatelessWidget {
                         height: 18,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: _ChatPageState.BLUE_BADGE,
+                          color: _ChatPageState.blueBadge,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
