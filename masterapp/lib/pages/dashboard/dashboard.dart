@@ -176,28 +176,74 @@ class _DashboardHomeBody extends StatelessWidget {
                     borderColor: const Color(0xFFE2E0E0),
                     name: 'Hanyakra Narendra',
                     role: 'Supervisor',
-                    onTap: () {},
+                    onTap: () {
+                      popup.hide();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProfilePage(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 14),
+
+                  // QUICK STATS
                   LayoutBuilder(
                     builder: (context, c) {
                       const spacing = 12.0;
                       final itemW = (c.maxWidth - spacing * 3) / 4;
-                      final itemH = isTablet ? 80.0 : 62.0;
+                      final itemH = isTablet ? 96.0 : 78.0;
 
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(4, (i) {
-                          return _QuickButton(
+                        children: [
+                          _StatQuickButton(
                             width: itemW,
                             height: itemH,
                             color: navy,
+                            value: '24',
+                            label: 'Pending',
                             onTap: () {},
-                          );
-                        }),
+                          ),
+                          _StatQuickButton(
+                            width: itemW,
+                            height: itemH,
+                            color: navy,
+                            value: '5',
+                            label: 'Projects',
+                            onTap: () {
+                              popup.hide();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const ProjectManagementPage(),
+                                ),
+                              );
+                            },
+                          ),
+                          _StatQuickButton(
+                            width: itemW,
+                            height: itemH,
+                            color: navy,
+                            value: '12',
+                            label: 'Reports',
+                            onTap: () {},
+                          ),
+                          _StatQuickButton(
+                            width: itemW,
+                            height: itemH,
+                            color: navy,
+                            value: '3',
+                            label: 'Members',
+                            onTap: () {},
+                          ),
+                        ],
                       );
                     },
                   ),
+
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -293,14 +339,17 @@ class _DashboardHomeBody extends StatelessWidget {
                       _ActivityItemData(
                         title: 'Safety inspection Completed',
                         icon: Icons.check_circle,
+                        iconColor: Color(0xFF16A34A),
                       ),
                       _ActivityItemData(
                         title: 'Inventory Update',
                         icon: Icons.inventory,
+                        iconColor: Color(0xFFD4AF37),
                       ),
                       _ActivityItemData(
                         title: 'New Task Assigned',
                         icon: Icons.assignment,
+                        iconColor: Color(0xFF7F1D1D),
                       ),
                     ],
                     onTapItem: (index) {
@@ -402,28 +451,80 @@ class _DashboardProfileCard extends StatelessWidget {
   }
 }
 
-class _QuickButton extends StatelessWidget {
+class _StatQuickButton extends StatelessWidget {
   final double width;
   final double height;
   final Color color;
+  final String value;
+  final String label;
   final VoidCallback onTap;
 
-  const _QuickButton({
+  const _StatQuickButton({
     required this.width,
     required this.height,
     required this.color,
+    required this.value,
+    required this.label,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isSmall = height < 85;
+
     return Material(
       color: color,
       borderRadius: BorderRadius.circular(15),
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.15),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(15),
-        child: SizedBox(width: width, height: height),
+        child: Container(
+          width: width,
+          height: height,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color,
+                color.withOpacity(0.92),
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmall ? 18 : 24,
+                  fontWeight: FontWeight.w900,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmall ? 11 : 13,
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -534,7 +635,7 @@ class _ActivityCard extends StatelessWidget {
                 children: [
                   Icon(
                     item.icon,
-                    color: const Color(0xFF16A34A),
+                    color: item.iconColor,
                     size: isTablet ? 26 : 22,
                   ),
                   const SizedBox(width: 10),
@@ -562,10 +663,12 @@ class _ActivityCard extends StatelessWidget {
 class _ActivityItemData {
   final String title;
   final IconData icon;
+  final Color iconColor;
 
   const _ActivityItemData({
     required this.title,
     required this.icon,
+    required this.iconColor,
   });
 }
 
