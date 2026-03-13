@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/project_item.dart';
 import 'document_management.dart';
-import '../file_manager/file_manager.dart';
 import 'note_management.dart';
 
 class TaskManagementPage extends StatefulWidget {
@@ -28,17 +27,10 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
   static const Color MUTED = Color(0xFF5E5E5E);
 
   final TextEditingController _searchC = TextEditingController();
-  final _filesKey = GlobalKey<ProjectFilesViewState>();
 
-  int _segmentIndex = 0; // 0 task, 1 note, 2 document, 3 files
+  int _segmentIndex = 0; // 0 task, 1 note, 2 document
   String _statusFilter = 'All status';
   String _deadlineFilter = 'Deadline';
-
-  String _projectKey() {
-    final lower = widget.project.title.trim().toLowerCase();
-    final sanitized = lower.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-    return sanitized.replaceAll(RegExp(r'_+'), '_').replaceAll(RegExp(r'^_|_$'), '');
-  }
 
   List<NoteItem> _notes = const [
     NoteItem(
@@ -98,7 +90,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
   void initState() {
     super.initState();
     final initial = widget.initialSegmentIndex;
-    if (initial >= 0 && initial <= 3) {
+    if (initial >= 0 && initial <= 2) {
       _segmentIndex = initial;
     }
   }
@@ -206,7 +198,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                             ? 'Search Note'
                             : _segmentIndex == 2
                             ? 'Search Document'
-                            : 'Search Files',
+                            : 'Search',
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 12),
@@ -287,15 +279,6 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                           documents: _documents,
                           onEdit: _handleEditDocument,
                         ),
-                      ] else ...[
-                        ProjectFilesView(
-                          key: _filesKey,
-                          projectKey: _projectKey(),
-                          query: query,
-                          navy: NAVY,
-                          card: CARD,
-                          muted: MUTED,
-                        ),
                       ],
                     ],
                   ),
@@ -311,9 +294,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     ? 'Add Task'
                     : _segmentIndex == 1
                     ? 'Add Note'
-                    : _segmentIndex == 2
-                    ? 'Add Doc'
-                    : 'New',
+                    : 'Add Doc',
                 onTap: () async {
                   if (_segmentIndex == 0) {
                     final task = await _showAddTaskDialog(context);
@@ -334,50 +315,6 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                   if (_segmentIndex == 2) {
                     await _handleAddDocument();
                     return;
-                  }
-
-                  final action = await showModalBottomSheet<String>(
-                    context: context,
-                    backgroundColor: Colors.white,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-                    ),
-                    builder: (_) {
-                      return SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 10),
-                            Container(
-                              width: 44,
-                              height: 5,
-                              decoration: BoxDecoration(
-                                color: Colors.black12,
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            ListTile(
-                              leading: const Icon(Icons.upload_rounded),
-                              title: const Text('Upload file'),
-                              onTap: () => Navigator.pop(context, 'upload'),
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.create_new_folder_rounded),
-                              title: const Text('New folder'),
-                              onTap: () => Navigator.pop(context, 'folder'),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-
-                  if (action == 'upload') {
-                    await _filesKey.currentState?.promptUpload();
-                  } else if (action == 'folder') {
-                    await _filesKey.currentState?.promptNewFolder();
                   }
                 },
               ),
@@ -708,7 +645,7 @@ class _SegmentBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const items = ['Task', 'Note', 'Document', 'Files'];
+    const items = ['Task', 'Note', 'Document'];
     const trackColor = Color(0xFFE7EDFD);
 
     return Container(

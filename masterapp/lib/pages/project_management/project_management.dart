@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'task_management.dart';
+import '../file_manager/project_file_manager_page.dart';
 import '../../models/project_item.dart';
 
 class ProjectManagementPage extends StatefulWidget {
@@ -120,8 +121,9 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                                   ],
                                   selected: _priorityFilter,
                                 );
-                                if (v != null)
+                                if (v != null) {
                                   setState(() => _priorityFilter = v);
+                                }
                               },
                             ),
                           ),
@@ -160,11 +162,9 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => TaskManagementPage(
-                                      project: p,
-                                      initialSegmentIndex:
-                                          widget.openFilesOnSelect ? 3 : 0,
-                                    ),
+                                    builder: (_) => widget.openFilesOnSelect
+                                        ? ProjectFileManagerPage(project: p)
+                                        : TaskManagementPage(project: p),
                                   ),
                                 );
                               },
@@ -348,7 +348,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      value: priority,
+                      initialValue: priority,
                       decoration: const InputDecoration(
                         labelText: 'Priority',
                         isDense: true,

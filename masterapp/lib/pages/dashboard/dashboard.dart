@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../profile/profile.dart';
 import '../inventory/inventory.dart';
 import '../inventory/updateinventory.dart';
+import '../file_manager/file_manager_home.dart';
 import '../project_management/project_management.dart';
 import '../notifications/notification.dart';
 import '../chat/chat.dart';
@@ -232,9 +233,7 @@ class _DashboardHomeBody extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const ProjectManagementPage(
-                                  openFilesOnSelect: true,
-                                ),
+                                builder: (_) => const FileManagerHomePage(),
                               ),
                             );
                           },
