@@ -162,6 +162,80 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
     }
   }
 
+  bool _looksLikeImageExtension(String ext) {
+    final lower = ext.trim().toLowerCase();
+    return lower == '.png' ||
+        lower == '.jpg' ||
+        lower == '.jpeg' ||
+        lower == '.jfif' ||
+        lower == '.gif' ||
+        lower == '.webp' ||
+        lower == '.avif' ||
+        lower == '.bmp' ||
+        lower == '.tif' ||
+        lower == '.tiff' ||
+        lower == '.heif' ||
+        lower == '.heic';
+  }
+
+  bool _looksLikeImageBytes(Uint8List bytes) {
+    if (bytes.lengthInBytes < 12) return false;
+
+    // PNG: 89 50 4E 47 0D 0A 1A 0A
+    if (bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0D &&
+        bytes[5] == 0x0A &&
+        bytes[6] == 0x1A &&
+        bytes[7] == 0x0A) {
+      return true;
+    }
+
+    // JPEG: FF D8 FF
+    if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
+      return true;
+    }
+
+    // GIF: "GIF87a" or "GIF89a"
+    if (bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x38 &&
+        (bytes[4] == 0x37 || bytes[4] == 0x39) &&
+        bytes[5] == 0x61) {
+      return true;
+    }
+
+    // WEBP: "RIFF"...."WEBP"
+    if (bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return true;
+    }
+
+    // BMP: "BM"
+    if (bytes[0] == 0x42 && bytes[1] == 0x4D) {
+      return true;
+    }
+
+    // HEIF/HEIC: ISO BMFF "ftyp" box often starts at offset 4: 66 74 79 70
+    if (bytes[4] == 0x66 &&
+        bytes[5] == 0x74 &&
+        bytes[6] == 0x79 &&
+        bytes[7] == 0x70) {
+      return true;
+    }
+
+    return false;
+  }
+
   IconData _iconFor(FileManagerEntry e) {
     if (e.isFolder) return Icons.folder_rounded;
     switch (e.category) {
@@ -517,7 +591,12 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
     final bytes = await _store.readFileBytes(widget.projectKey, entry);
     if (!mounted) return;
 
-    if (entry.category == FileCategory.image && bytes != null) {
+    final shouldPreviewAsImage = bytes != null &&
+        (entry.category == FileCategory.image ||
+            _looksLikeImageExtension(entry.extension) ||
+            _looksLikeImageBytes(bytes));
+
+    if (shouldPreviewAsImage) {
       // ignore: use_build_context_synchronously
       await showDialog<void>(
         context: context,
@@ -541,7 +620,20 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
                 ),
                 Flexible(
                   child: InteractiveViewer(
-                    child: Image.memory(bytes, fit: BoxFit.contain),
+                    child: Image.memory(
+                      bytes,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'Preview not available for this image format.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 Padding(

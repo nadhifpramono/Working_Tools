@@ -58,9 +58,14 @@ class ProjectFileStore {
     if (hasExt('.png') ||
         hasExt('.jpg') ||
         hasExt('.jpeg') ||
+        hasExt('.jfif') ||
         hasExt('.gif') ||
         hasExt('.webp') ||
+        hasExt('.avif') ||
         hasExt('.bmp') ||
+        hasExt('.tif') ||
+        hasExt('.tiff') ||
+        hasExt('.heif') ||
         hasExt('.heic')) {
       return FileCategory.image;
     }
@@ -212,4 +217,3 @@ class ProjectFileStore {
     }
   }
 }
-
