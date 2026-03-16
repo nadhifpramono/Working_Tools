@@ -1,0 +1,4 @@
+File Manager > Project > Filter > Document, Image, Video, Audio, Archive, Other
+             > Project > Detail & Activity > bisa juga didalam folder
+Project Managemenet > Create Project > Tanggal
+                    > Deadline

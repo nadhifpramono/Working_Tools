@@ -6,8 +6,13 @@ import 'note_management.dart';
 
 class TaskManagementPage extends StatefulWidget {
   final ProjectItem project;
+  final int initialSegmentIndex;
 
-  const TaskManagementPage({super.key, required this.project});
+  const TaskManagementPage({
+    super.key,
+    required this.project,
+    this.initialSegmentIndex = 0,
+  });
 
   @override
   State<TaskManagementPage> createState() => _TaskManagementPageState();
@@ -80,6 +85,15 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
       status: _TaskStatus.toDo,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialSegmentIndex;
+    if (initial >= 0 && initial <= 2) {
+      _segmentIndex = initial;
+    }
+  }
 
   @override
   void dispose() {
@@ -182,7 +196,9 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                             ? 'Search Task'
                             : _segmentIndex == 1
                             ? 'Search Note'
-                            : 'Search Document',
+                            : _segmentIndex == 2
+                            ? 'Search Document'
+                            : 'Search',
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 12),
@@ -257,7 +273,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                           notes: _notes,
                           onEdit: _handleEditNote,
                         ),
-                      ] else ...[
+                      ] else if (_segmentIndex == 2) ...[
                         ProjectDocumentsView(
                           query: query,
                           documents: _documents,
@@ -296,7 +312,10 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     return;
                   }
 
-                  await _handleAddDocument();
+                  if (_segmentIndex == 2) {
+                    await _handleAddDocument();
+                    return;
+                  }
                 },
               ),
             ),

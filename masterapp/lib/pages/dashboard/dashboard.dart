@@ -3,6 +3,7 @@ import '../profile/profile.dart';
 import '../inventory/inventory.dart';
 import '../inventory/updateinventory.dart';
 import '../project_management/project_management.dart';
+import '../file_manager/file_manager_home.dart';
 import '../notifications/notification.dart';
 import '../chat/chat.dart';
 
@@ -266,7 +267,15 @@ class _DashboardHomeBody extends StatelessWidget {
                           icon: Icons.description_outlined,
                           bg: soft,
                           border: border,
-                          onTap: () {},
+                            onTap: () {
+                              popup.hide();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const FileManagerHomePage(),
+                                ),
+                              );
+                            },
                         ),
                         _MenuTile(
                           label: 'project management',
