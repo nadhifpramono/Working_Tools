@@ -26,6 +26,9 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _pinEnabled = false;
   String _language = 'Indonesia';
 
+  String _dashboardKeyword = '';
+  String _dashboardFilter = 'Semua';
+
   @override
   void dispose() {
     _popup.hide();
@@ -40,6 +43,134 @@ class _DashboardPageState extends State<DashboardPage> {
         builder: (_) => const NotificationPage(),
       ),
     );
+  }
+
+  void _clearDashboardSearch() {
+    setState(() {
+      _dashboardKeyword = '';
+      _dashboardFilter = 'Semua';
+    });
+  }
+
+  Future<void> _openDashboardSearch() async {
+    _popup.hide();
+
+    final keywordC = TextEditingController(text: _dashboardKeyword);
+    String selectedFilter = _dashboardFilter;
+
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final filters = ['Semua', 'Menu', 'Aktivitas', 'Statistik'];
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                16 + MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Search Dashboard',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: keywordC,
+                    decoration: InputDecoration(
+                      hintText: 'Cari menu, aktivitas, statistik...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: const Color(0xFFF4F6FB),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Filter',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: filters.map((filter) {
+                      return ChoiceChip(
+                        label: Text(filter),
+                        selected: selectedFilter == filter,
+                        onSelected: (_) {
+                          setSheetState(() => selectedFilter = filter);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext, {
+                              'keyword': '',
+                              'filter': 'Semua',
+                            });
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext, {
+                              'keyword': keywordC.text.trim(),
+                              'filter': selectedFilter,
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF101D6E),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Terapkan'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _dashboardKeyword = result['keyword'] ?? '';
+        _dashboardFilter = result['filter'] ?? 'Semua';
+      });
+    }
   }
 
   @override
@@ -59,6 +190,10 @@ class _DashboardPageState extends State<DashboardPage> {
             onPinChanged: (v) => setState(() => _pinEnabled = v),
             onLanguageChanged: (v) => setState(() => _language = v),
             onTapNotification: _openNotificationPage,
+            onTapSearch: _openDashboardSearch,
+            onClearSearch: _clearDashboardSearch,
+            searchKeyword: _dashboardKeyword,
+            searchFilter: _dashboardFilter,
           ),
           const ChatPage(),
           const _PlaceholderPage(title: 'File Manager'),
@@ -88,6 +223,10 @@ class _DashboardHomeBody extends StatelessWidget {
   final ValueChanged<bool> onPinChanged;
   final ValueChanged<String> onLanguageChanged;
   final VoidCallback onTapNotification;
+  final VoidCallback onTapSearch;
+  final VoidCallback onClearSearch;
+  final String searchKeyword;
+  final String searchFilter;
 
   const _DashboardHomeBody({
     required this.settingsLink,
@@ -99,6 +238,10 @@ class _DashboardHomeBody extends StatelessWidget {
     required this.onPinChanged,
     required this.onLanguageChanged,
     required this.onTapNotification,
+    required this.onTapSearch,
+    required this.onClearSearch,
+    required this.searchKeyword,
+    required this.searchFilter,
   });
 
   static const Color navy = Color(0xFF101D6E);
@@ -114,6 +257,124 @@ class _DashboardHomeBody extends StatelessWidget {
 
     final gridCrossAxisCount = isTablet ? 4 : 3;
     final gridSpacing = isTablet ? 16.0 : 12.0;
+
+    final keyword = searchKeyword.trim().toLowerCase();
+
+    bool matches(String value) {
+      if (keyword.isEmpty) return true;
+      return value.toLowerCase().contains(keyword);
+    }
+
+    final stats = <_DashboardStatData>[
+      _DashboardStatData(value: '24', label: 'Pending', onTap: () {}),
+      _DashboardStatData(
+        value: '5',
+        label: 'Projects',
+        onTap: () {
+          popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ProjectManagementPage(),
+            ),
+          );
+        },
+      ),
+      _DashboardStatData(value: '12', label: 'Reports', onTap: () {}),
+      _DashboardStatData(value: '3', label: 'Members', onTap: () {}),
+    ];
+
+    final menus = <_DashboardMenuData>[
+      _DashboardMenuData(
+        label: 'file manager',
+        icon: Icons.description_outlined,
+        onTap: () {
+          popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const FileManagerHomePage(),
+            ),
+          );
+        },
+      ),
+      _DashboardMenuData(
+        label: 'project management',
+        icon: Icons.assignment_outlined,
+        onTap: () {
+          popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ProjectManagementPage(),
+            ),
+          );
+        },
+      ),
+      _DashboardMenuData(
+        label: 'inventory',
+        icon: Icons.inventory_2_outlined,
+        onTap: () {
+          popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const InventoryPage(),
+            ),
+          );
+        },
+      ),
+      _DashboardMenuData(
+        label: 'notes',
+        icon: Icons.event_note_outlined,
+        onTap: () {},
+      ),
+      _DashboardMenuData(
+        label: 'finance',
+        icon: Icons.account_balance_wallet_outlined,
+        onTap: () {},
+      ),
+      _DashboardMenuData(
+        label: 'service all',
+        icon: Icons.grid_view_rounded,
+        onTap: () {},
+      ),
+    ];
+
+    final activities = const <_ActivityItemData>[
+      _ActivityItemData(
+        title: 'Safety inspection Completed',
+        icon: Icons.check_circle,
+        iconColor: Color(0xFF16A34A),
+      ),
+      _ActivityItemData(
+        title: 'Inventory Update',
+        icon: Icons.inventory,
+        iconColor: Color(0xFFD4AF37),
+      ),
+      _ActivityItemData(
+        title: 'New Task Assigned',
+        icon: Icons.assignment,
+        iconColor: Color(0xFF7F1D1D),
+      ),
+    ];
+
+    final showStats = searchFilter == 'Semua' || searchFilter == 'Statistik';
+    final showMenus = searchFilter == 'Semua' || searchFilter == 'Menu';
+    final showActivities =
+        searchFilter == 'Semua' || searchFilter == 'Aktivitas';
+
+    final filteredStats =
+        stats.where((e) => matches('${e.label} ${e.value}')).toList();
+    final filteredMenus = menus.where((e) => matches(e.label)).toList();
+    final filteredActivities =
+        activities.where((e) => matches(e.title)).toList();
+
+    final hasSearch = searchKeyword.isNotEmpty || searchFilter != 'Semua';
+    final hasAnyResult =
+        (showStats && filteredStats.isNotEmpty) ||
+        (showMenus && filteredMenus.isNotEmpty) ||
+        (showActivities && filteredActivities.isNotEmpty);
 
     return SafeArea(
       child: CustomScrollView(
@@ -134,6 +395,12 @@ class _DashboardHomeBody extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                  ),
+                  IconButton(
+                    onPressed: onTapSearch,
+                    icon: const Icon(Icons.search_rounded),
+                    color: Colors.white,
+                    tooltip: 'Search',
                   ),
                   IconButton(
                     onPressed: onTapNotification,
@@ -187,192 +454,137 @@ class _DashboardHomeBody extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 14),
-
-                  // QUICK STATS
-                  LayoutBuilder(
-                    builder: (context, c) {
-                      const spacing = 12.0;
-                      final itemW = (c.maxWidth - spacing * 3) / 4;
-                      final itemH = isTablet ? 96.0 : 78.0;
-
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  if (hasSearch) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: border),
+                      ),
+                      child: Row(
                         children: [
-                          _StatQuickButton(
-                            width: itemW,
-                            height: itemH,
-                            color: navy,
-                            value: '24',
-                            label: 'Pending',
-                            onTap: () {},
+                          const Icon(Icons.tune, size: 18, color: navy),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Pencarian: "${searchKeyword.isEmpty ? '-' : searchKeyword}" • Filter: $searchFilter',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: text,
+                              ),
+                            ),
                           ),
-                          _StatQuickButton(
-                            width: itemW,
-                            height: itemH,
-                            color: navy,
-                            value: '5',
-                            label: 'Projects',
-                            onTap: () {
-                              popup.hide();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const ProjectManagementPage(),
-                                ),
-                              );
-                            },
-                          ),
-                          _StatQuickButton(
-                            width: itemW,
-                            height: itemH,
-                            color: navy,
-                            value: '12',
-                            label: 'Reports',
-                            onTap: () {},
-                          ),
-                          _StatQuickButton(
-                            width: itemW,
-                            height: itemH,
-                            color: navy,
-                            value: '3',
-                            label: 'Members',
-                            onTap: () {},
+                          TextButton(
+                            onPressed: onClearSearch,
+                            child: const Text('Clear'),
                           ),
                         ],
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: GridView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: gridCrossAxisCount,
-                        crossAxisSpacing: gridSpacing,
-                        mainAxisSpacing: gridSpacing,
-                        childAspectRatio: isTablet ? 1.1 : 1.05,
                       ),
-                      children: [
-                        _MenuTile(
-                          label: 'file manager',
-                          icon: Icons.description_outlined,
-                          bg: soft,
-                          border: border,
-                            onTap: () {
-                              popup.hide();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const FileManagerHomePage(),
-                                ),
-                              );
-                            },
-                        ),
-                        _MenuTile(
-                          label: 'project management',
-                          icon: Icons.assignment_outlined,
-                          bg: soft,
-                          border: border,
-                          onTap: () {
-                            popup.hide();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ProjectManagementPage(),
-                              ),
-                            );
-                          },
-                        ),
-                        _MenuTile(
-                          label: 'inventory',
-                          icon: Icons.inventory_2_outlined,
-                          bg: soft,
-                          border: border,
-                          onTap: () {
-                            popup.hide();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const InventoryPage(),
-                              ),
-                            );
-                          },
-                        ),
-                        _MenuTile(
-                          label: 'notes',
-                          icon: Icons.event_note_outlined,
-                          bg: soft,
-                          border: border,
-                          onTap: () {},
-                        ),
-                        _MenuTile(
-                          label: 'finance',
-                          icon: Icons.account_balance_wallet_outlined,
-                          bg: soft,
-                          border: border,
-                          onTap: () {},
-                        ),
-                        _MenuTile(
-                          label: 'service all',
-                          icon: Icons.grid_view_rounded,
-                          bg: soft,
-                          border: border,
-                          onTap: () {},
-                        ),
-                      ],
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 14),
-                  Text(
-                    'Recent Activities',
-                    style: TextStyle(
-                      fontSize: isTablet ? 22 : 18,
-                      fontWeight: FontWeight.w700,
-                      color: text,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _ActivityCard(
-                    bg: soft,
-                    border: border,
-                    items: const [
-                      _ActivityItemData(
-                        title: 'Safety inspection Completed',
-                        icon: Icons.check_circle,
-                        iconColor: Color(0xFF16A34A),
-                      ),
-                      _ActivityItemData(
-                        title: 'Inventory Update',
-                        icon: Icons.inventory,
-                        iconColor: Color(0xFFD4AF37),
-                      ),
-                      _ActivityItemData(
-                        title: 'New Task Assigned',
-                        icon: Icons.assignment,
-                        iconColor: Color(0xFF7F1D1D),
-                      ),
-                    ],
-                    onTapItem: (index) {
-                      if (index == 1) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const UpdateInventoryPage(),
-                          ),
+
+                  if (showStats && filteredStats.isNotEmpty) ...[
+                    LayoutBuilder(
+                      builder: (context, c) {
+                        const spacing = 12.0;
+                        final columns = filteredStats.length >= 4
+                            ? 4
+                            : filteredStats.length;
+                        final itemW =
+                            (c.maxWidth - spacing * (columns - 1)) / columns;
+                        final itemH = isTablet ? 96.0 : 78.0;
+
+                        return Wrap(
+                          spacing: spacing,
+                          runSpacing: spacing,
+                          children: filteredStats.map((item) {
+                            return _StatQuickButton(
+                              width: itemW,
+                              height: itemH,
+                              color: navy,
+                              value: item.value,
+                              label: item.label,
+                              onTap: item.onTap,
+                            );
+                          }).toList(),
                         );
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  if (showMenus && filteredMenus.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: GridView(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: filteredMenus.length < gridCrossAxisCount
+                              ? filteredMenus.length
+                              : gridCrossAxisCount,
+                          crossAxisSpacing: gridSpacing,
+                          mainAxisSpacing: gridSpacing,
+                          childAspectRatio: isTablet ? 1.1 : 1.05,
+                        ),
+                        children: filteredMenus.map((item) {
+                          return _MenuTile(
+                            label: item.label,
+                            icon: item.icon,
+                            bg: soft,
+                            border: border,
+                            onTap: item.onTap,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+
+                  if (showActivities && filteredActivities.isNotEmpty) ...[
+                    Text(
+                      'Recent Activities',
+                      style: TextStyle(
+                        fontSize: isTablet ? 22 : 18,
+                        fontWeight: FontWeight.w700,
+                        color: text,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _ActivityCard(
+                      bg: soft,
+                      border: border,
+                      items: filteredActivities,
+                      onTapItem: (index) {
+                        final tapped = filteredActivities[index];
+                        if (tapped.title == 'Inventory Update') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const UpdateInventoryPage(),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  if (hasSearch && !hasAnyResult)
+                    const _SearchEmptyState(
+                      title: 'Data tidak ditemukan',
+                      subtitle: 'Coba ganti keyword atau filter pencarian.',
+                    ),
                 ],
               ),
             ),
@@ -1084,6 +1296,78 @@ class _PlaceholderPage extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DashboardStatData {
+  final String value;
+  final String label;
+  final VoidCallback onTap;
+
+  const _DashboardStatData({
+    required this.value,
+    required this.label,
+    required this.onTap,
+  });
+}
+
+class _DashboardMenuData {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _DashboardMenuData({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+}
+
+class _SearchEmptyState extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SearchEmptyState({
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFDCECFF)),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.search_off_rounded,
+            size: 42,
+            color: Color(0xFF6B7280),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -23,6 +23,7 @@ class _ChatPageState extends State<ChatPage> {
 
   int _segment = 0; // 0 = Chats, 1 = Groups
   final TextEditingController _searchC = TextEditingController();
+  String _chatFilter = 'Semua';
 
   final LayerLink _settingsLink = LayerLink();
   final SettingsPopupController _popup = SettingsPopupController();
@@ -179,6 +180,141 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
+  void _clearChatSearch() {
+    setState(() {
+      _searchC.clear();
+      _chatFilter = 'Semua';
+    });
+  }
+
+  int _extractMemberCount(String text) {
+    final match = RegExp(r'(\d+)').firstMatch(text);
+    return int.tryParse(match?.group(1) ?? '0') ?? 0;
+  }
+
+  Future<void> _openChatSearchFilter() async {
+    _popup.hide();
+
+    final keywordC = TextEditingController(text: _searchC.text);
+    String selectedFilter = _chatFilter;
+
+    final filters = _segment == 0
+        ? ['Semua', 'Online', 'Offline', 'Unread', 'Verified']
+        : ['Semua', 'Unread', 'Member Banyak', 'Member Sedikit'];
+
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                16 + MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Search Chat',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: keywordC,
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama, pesan, status...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: const Color(0xFFF4F6FB),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Filter',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: filters.map((filter) {
+                      return ChoiceChip(
+                        label: Text(filter),
+                        selected: selectedFilter == filter,
+                        onSelected: (_) {
+                          setSheetState(() => selectedFilter = filter);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext, {
+                              'keyword': '',
+                              'filter': 'Semua',
+                            });
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext, {
+                              'keyword': keywordC.text.trim(),
+                              'filter': selectedFilter,
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: navy,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Terapkan'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _searchC.text = result['keyword'] ?? '';
+        _chatFilter = result['filter'] ?? 'Semua';
+      });
+    }
+  }
+
   void _openChat(_ChatItem item, {required bool isGroup}) {
     _popup.hide();
     Navigator.push(
@@ -206,17 +342,17 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _openSettingsPopup() {
-  _popup.show(
-    context: context,
-    link: _settingsLink,
-    darkMode: _darkMode,
-    pinEnabled: _pinEnabled,
-    language: _language,
-    onDarkModeChanged: (v) => setState(() => _darkMode = v),
-    onPinChanged: (v) => setState(() => _pinEnabled = v),
-    onLanguageChanged: (v) => setState(() => _language = v),
-  );
-}
+    _popup.show(
+      context: context,
+      link: _settingsLink,
+      darkMode: _darkMode,
+      pinEnabled: _pinEnabled,
+      language: _language,
+      onDarkModeChanged: (v) => setState(() => _darkMode = v),
+      onPinChanged: (v) => setState(() => _pinEnabled = v),
+      onLanguageChanged: (v) => setState(() => _language = v),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -228,10 +364,47 @@ class _ChatPageState extends State<ChatPage> {
     final keyword = _searchC.text.trim().toLowerCase();
 
     final listData = sourceList.where((item) {
-      if (keyword.isEmpty) return true;
-      return item.name.toLowerCase().contains(keyword) ||
+      final textOk = keyword.isEmpty ||
+          item.name.toLowerCase().contains(keyword) ||
           item.roleOrStatus.toLowerCase().contains(keyword) ||
           item.lastMessage.toLowerCase().contains(keyword);
+
+      bool filterOk = true;
+
+      if (_segment == 0) {
+        switch (_chatFilter) {
+          case 'Online':
+            filterOk = item.roleOrStatus.toLowerCase() == 'online';
+            break;
+          case 'Offline':
+            filterOk = item.roleOrStatus.toLowerCase() == 'offline';
+            break;
+          case 'Unread':
+            filterOk = item.unread > 0;
+            break;
+          case 'Verified':
+            filterOk = item.verified;
+            break;
+          default:
+            filterOk = true;
+        }
+      } else {
+        switch (_chatFilter) {
+          case 'Unread':
+            filterOk = item.unread > 0;
+            break;
+          case 'Member Banyak':
+            filterOk = _extractMemberCount(item.roleOrStatus) >= 8;
+            break;
+          case 'Member Sedikit':
+            filterOk = _extractMemberCount(item.roleOrStatus) < 8;
+            break;
+          default:
+            filterOk = true;
+        }
+      }
+
+      return textOk && filterOk;
     }).toList();
 
     return Container(
@@ -239,11 +412,12 @@ class _ChatPageState extends State<ChatPage> {
       child: SafeArea(
         child: Column(
           children: [
-           _TopBarNavy(
+            _TopBarNavy(
               title: "Chat (home page)",
               settingsLink: _settingsLink,
               onGear: _openSettingsPopup,
               onBell: _openNotificationPage,
+              onSearch: _openChatSearchFilter,
             ),
             Expanded(
               child: Padding(
@@ -261,7 +435,10 @@ class _ChatPageState extends State<ChatPage> {
                       value: _segment,
                       onChanged: (v) {
                         _popup.hide();
-                        setState(() => _segment = v);
+                        setState(() {
+                          _segment = v;
+                          _chatFilter = 'Semua';
+                        });
                       },
                     ),
                     const SizedBox(height: 12),
@@ -277,45 +454,104 @@ class _ChatPageState extends State<ChatPage> {
                         );
                       },
                     ),
+                    if (_searchC.text.trim().isNotEmpty ||
+                        _chatFilter != 'Semua') ...[
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  if (_searchC.text.trim().isNotEmpty)
+                                    Chip(
+                                      label: Text(
+                                        'Keyword: ${_searchC.text.trim()}',
+                                      ),
+                                      deleteIcon: const Icon(
+                                        Icons.close,
+                                        size: 18,
+                                      ),
+                                      onDeleted: () {
+                                        setState(() => _searchC.clear());
+                                      },
+                                    ),
+                                  if (_chatFilter != 'Semua')
+                                    Chip(
+                                      label: Text('Filter: $_chatFilter'),
+                                      deleteIcon: const Icon(
+                                        Icons.close,
+                                        size: 18,
+                                      ),
+                                      onDeleted: () {
+                                        setState(() => _chatFilter = 'Semua');
+                                      },
+                                    ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _clearChatSearch,
+                              child: const Text('Clear'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.only(
-                          bottom: 16,
-                          left: 16,
-                          right: 16,
-                        ),
-                        itemCount: listData.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) {
-                          final item = listData[i];
+                      child: listData.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: _SearchEmptyState(
+                                title: 'Chat tidak ditemukan',
+                                subtitle: 'Coba ubah keyword atau filter.',
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.only(
+                                bottom: 16,
+                                left: 16,
+                                right: 16,
+                              ),
+                              itemCount: listData.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, i) {
+                                final item = listData[i];
 
-                          return _SwipeTile(
-                            key: ValueKey("${item.name}-${item.time}-$i-$_segment"),
-                            item: item,
-                            borderColor: item.highlighted ? blueBadge : border,
-                            onTap: () {
-                              _openChat(item, isGroup: _segment == 1);
-                            },
-                            onArchive: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Archived: ${item.name}"),
-                                ),
-                              );
-                            },
-                            onDelete: () {
-                              setState(() {
-                                if (_segment == 0) {
-                                  _items.remove(item);
-                                } else {
-                                  _groups.remove(item);
-                                }
-                              });
-                            },
-                          );
-                        },
-                      ),
+                                return _SwipeTile(
+                                  key: ValueKey(
+                                    "${item.name}-${item.time}-$i-$_segment",
+                                  ),
+                                  item: item,
+                                  borderColor:
+                                      item.highlighted ? blueBadge : border,
+                                  onTap: () {
+                                    _openChat(item, isGroup: _segment == 1);
+                                  },
+                                  onArchive: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("Archived: ${item.name}"),
+                                      ),
+                                    );
+                                  },
+                                  onDelete: () {
+                                    setState(() {
+                                      if (_segment == 0) {
+                                        _items.remove(item);
+                                      } else {
+                                        _groups.remove(item);
+                                      }
+                                    });
+                                  },
+                                );
+                              },
+                            ),
                     ),
                   ],
                 ),
@@ -333,12 +569,14 @@ class _TopBarNavy extends StatelessWidget {
   final LayerLink settingsLink;
   final VoidCallback onGear;
   final VoidCallback onBell;
+  final VoidCallback onSearch;
 
   const _TopBarNavy({
     required this.title,
     required this.settingsLink,
     required this.onGear,
     required this.onBell,
+    required this.onSearch,
   });
 
   @override
@@ -363,27 +601,31 @@ class _TopBarNavy extends StatelessWidget {
             ),
           ),
           IconButton(
+            onPressed: onSearch,
+            icon: const Icon(Icons.search_rounded),
+            color: Colors.white,
+          ),
+          IconButton(
             onPressed: onBell,
             icon: const Icon(Icons.notifications_none_rounded),
             color: Colors.white,
           ),
           CompositedTransformTarget(
-          link: settingsLink,
-          child: InkWell(
-            onTap: onGear,
-            borderRadius: BorderRadius.circular(12),
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Icon(Icons.settings, color: Colors.white),
+            link: settingsLink,
+            child: InkWell(
+              onTap: onGear,
+              borderRadius: BorderRadius.circular(12),
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(Icons.settings, color: Colors.white),
+              ),
             ),
           ),
-        ),
         ],
       ),
     );
   }
 }
-
 
 class _ChatProfileCard extends StatelessWidget {
   final String name;
@@ -724,7 +966,11 @@ class _SwipeTile extends StatelessWidget {
                       Row(
                         children: [
                           if (item.verified)
-                            const Icon(Icons.check, size: 14, color: Colors.black54),
+                            const Icon(
+                              Icons.check,
+                              size: 14,
+                              color: Colors.black54,
+                            ),
                           if (item.verified) const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -1186,6 +1432,55 @@ class _RowAction extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SearchEmptyState extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SearchEmptyState({
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE6E6E6)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.search_off_rounded,
+            size: 42,
+            color: Color(0xFF6B7280),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

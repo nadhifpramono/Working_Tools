@@ -25,6 +25,9 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _pinEnabled = false;
   String _language = 'Indonesia';
 
+  String _profileKeyword = '';
+  String _profileFilter = 'Semua';
+
   @override
   void dispose() {
     _popup.hide();
@@ -41,10 +44,239 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _clearProfileSearch() {
+    setState(() {
+      _profileKeyword = '';
+      _profileFilter = 'Semua';
+    });
+  }
+
+  Future<void> _openProfileSearch() async {
+    _popup.hide();
+
+    final keywordC = TextEditingController(text: _profileKeyword);
+    String selectedFilter = _profileFilter;
+
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final filters = ['Semua', 'Service', 'Inventory', 'Statistik'];
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                16 + MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Search Profile',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: keywordC,
+                    decoration: InputDecoration(
+                      hintText: 'Cari service, stock, statistik...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: const Color(0xFFF4F6FB),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Filter',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: filters.map((filter) {
+                      return ChoiceChip(
+                        label: Text(filter),
+                        selected: selectedFilter == filter,
+                        onSelected: (_) {
+                          setSheetState(() => selectedFilter = filter);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext, {
+                              'keyword': '',
+                              'filter': 'Semua',
+                            });
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(sheetContext, {
+                              'keyword': keywordC.text.trim(),
+                              'filter': selectedFilter,
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: NAVY,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Terapkan'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _profileKeyword = result['keyword'] ?? '';
+        _profileFilter = result['filter'] ?? 'Semua';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final isTablet = w >= 768;
+
+    bool matches(String value) {
+      final keyword = _profileKeyword.trim().toLowerCase();
+      if (keyword.isEmpty) return true;
+      return value.toLowerCase().contains(keyword);
+    }
+
+    final stats = <_ProfileStatData>[
+      _ProfileStatData(value: '24', label: 'Pending', onTap: () => _popup.hide()),
+      _ProfileStatData(value: '8', label: 'Service', onTap: () => _popup.hide()),
+      _ProfileStatData(
+        value: '11',
+        label: 'Stock Out',
+        onTap: () {
+          _popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StockOutPage()),
+          );
+        },
+      ),
+      _ProfileStatData(
+        value: '19',
+        label: 'Stock In',
+        onTap: () {
+          _popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StockInPage()),
+          );
+        },
+      ),
+    ];
+
+    final serviceMenus = <_ProfileMenuData>[
+      _ProfileMenuData(
+        label: 'Service',
+        icon: Icons.build_outlined,
+        iconColor: Colors.black,
+        onTap: () => _popup.hide(),
+      ),
+      _ProfileMenuData(
+        label: 'Available',
+        icon: Icons.check_circle,
+        iconColor: const Color(0xFF16A34A),
+        onTap: () => _popup.hide(),
+      ),
+      _ProfileMenuData(
+        label: 'History',
+        icon: Icons.history,
+        iconColor: Colors.black,
+        onTap: () => _popup.hide(),
+      ),
+    ];
+
+    final inventoryMenus = <_ProfileMenuData>[
+      _ProfileMenuData(
+        label: 'Stock out',
+        icon: Icons.outbox_outlined,
+        iconColor: Colors.black,
+        onTap: () {
+          _popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StockOutPage()),
+          );
+        },
+      ),
+      _ProfileMenuData(
+        label: 'Stock in',
+        icon: Icons.inventory_2_outlined,
+        iconColor: Colors.black,
+        onTap: () {
+          _popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StockInPage()),
+          );
+        },
+      ),
+    ];
+
+    final showStats =
+        _profileFilter == 'Semua' || _profileFilter == 'Statistik';
+    final showService =
+        _profileFilter == 'Semua' || _profileFilter == 'Service';
+    final showInventory =
+        _profileFilter == 'Semua' || _profileFilter == 'Inventory';
+
+    final filteredStats =
+        stats.where((e) => matches('${e.label} ${e.value}')).toList();
+    final filteredServiceMenus =
+        serviceMenus.where((e) => matches(e.label)).toList();
+    final filteredInventoryMenus =
+        inventoryMenus.where((e) => matches(e.label)).toList();
+
+    final hasSearch = _profileKeyword.isNotEmpty || _profileFilter != 'Semua';
+    final hasAnyResult =
+        (showStats && filteredStats.isNotEmpty) ||
+        (showService && filteredServiceMenus.isNotEmpty) ||
+        (showInventory && filteredInventoryMenus.isNotEmpty);
 
     return Scaffold(
       backgroundColor: BG,
@@ -67,6 +299,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                    ),
+                    IconButton(
+                      onPressed: _openProfileSearch,
+                      icon: const Icon(Icons.search_rounded),
+                      color: Colors.white,
+                      tooltip: "Search",
                     ),
                     IconButton(
                       onPressed: _onTapNotification,
@@ -122,133 +360,114 @@ class _ProfilePageState extends State<ProfilePage> {
                         );
                       },
                     ),
-                    const SizedBox(height: 14),
 
-                    // QUICK STATS PROFILE
-                    LayoutBuilder(
-                      builder: (context, c) {
-                        const spacing = 12.0;
-                        final itemW = (c.maxWidth - spacing * 3) / 4;
-                        final itemH = isTablet ? 96.0 : 78.0;
-
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    if (hasSearch) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: BORDER),
+                        ),
+                        child: Row(
                           children: [
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '24',
-                              label: 'Pending',
-                              onTap: () => _popup.hide(),
+                            const Icon(Icons.tune, size: 18, color: NAVY),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Pencarian: "${_profileKeyword.isEmpty ? '-' : _profileKeyword}" • Filter: $_profileFilter',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: TEXT,
+                                ),
+                              ),
                             ),
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '8',
-                              label: 'Service',
-                              onTap: () => _popup.hide(),
-                            ),
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '11',
-                              label: 'Stock Out',
-                              onTap: () {
-                                _popup.hide();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const StockOutPage(),
-                                  ),
-                                );
-                              },
-                            ),
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '19',
-                              label: 'Stock In',
-                              onTap: () {
-                                _popup.hide();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const StockInPage(),
-                                  ),
-                                );
-                              },
+                            TextButton(
+                              onPressed: _clearProfileSearch,
+                              child: const Text('Clear'),
                             ),
                           ],
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    _MenuGroupCard(
-                      children: [
-                        _MenuRow(
-                          icon: Icons.build_outlined,
-                          iconColor: Colors.black,
-                          label: 'Service',
-                          onTap: () => _popup.hide(),
                         ),
-                        const _DividerLine(),
-                        _MenuRow(
-                          icon: Icons.check_circle,
-                          iconColor: Color(0xFF16A34A),
-                          label: 'Available',
-                          onTap: () => _popup.hide(),
-                        ),
-                        const _DividerLine(),
-                        _MenuRow(
-                          icon: Icons.history,
-                          iconColor: Colors.black,
-                          label: 'History',
-                          onTap: () => _popup.hide(),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
 
                     const SizedBox(height: 14),
 
-                    _MenuGroupCard(
-                      children: [
-                        _MenuRow(
-                          icon: Icons.outbox_outlined,
-                          iconColor: Colors.black,
-                          label: 'Stock out',
-                          onTap: () {
-                            _popup.hide();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const StockOutPage(),
-                              ),
-                            );
-                          },
-                        ),
-                        const _DividerLine(),
-                        _MenuRow(
-                          icon: Icons.inventory_2_outlined,
-                          iconColor: Colors.black,
-                          label: 'Stock in',
-                          onTap: () {
-                            _popup.hide();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const StockInPage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                    if (showStats && filteredStats.isNotEmpty) ...[
+                      LayoutBuilder(
+                        builder: (context, c) {
+                          const spacing = 12.0;
+                          final columns = filteredStats.length >= 4
+                              ? 4
+                              : filteredStats.length;
+                          final itemW =
+                              (c.maxWidth - spacing * (columns - 1)) / columns;
+                          final itemH = isTablet ? 96.0 : 78.0;
+
+                          return Wrap(
+                            spacing: spacing,
+                            runSpacing: spacing,
+                            children: filteredStats.map((item) {
+                              return _StatQuickButton(
+                                width: itemW,
+                                height: itemH,
+                                color: NAVY,
+                                value: item.value,
+                                label: item.label,
+                                onTap: item.onTap,
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    if (showService && filteredServiceMenus.isNotEmpty) ...[
+                      _MenuGroupCard(
+                        children: [
+                          for (int i = 0; i < filteredServiceMenus.length; i++) ...[
+                            _MenuRow(
+                              icon: filteredServiceMenus[i].icon,
+                              iconColor: filteredServiceMenus[i].iconColor,
+                              label: filteredServiceMenus[i].label,
+                              onTap: filteredServiceMenus[i].onTap,
+                            ),
+                            if (i != filteredServiceMenus.length - 1)
+                              const _DividerLine(),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    if (showInventory && filteredInventoryMenus.isNotEmpty) ...[
+                      _MenuGroupCard(
+                        children: [
+                          for (int i = 0; i < filteredInventoryMenus.length; i++) ...[
+                            _MenuRow(
+                              icon: filteredInventoryMenus[i].icon,
+                              iconColor: filteredInventoryMenus[i].iconColor,
+                              label: filteredInventoryMenus[i].label,
+                              onTap: filteredInventoryMenus[i].onTap,
+                            ),
+                            if (i != filteredInventoryMenus.length - 1)
+                              const _DividerLine(),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    if (hasSearch && !hasAnyResult)
+                      const _SearchEmptyState(
+                        title: 'Data profile tidak ditemukan',
+                        subtitle: 'Coba ganti keyword atau filter pencarian.',
+                      ),
 
                     const SizedBox(height: 14),
 
@@ -272,8 +491,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(10),
                       child: Row(
                         children: [
-                          const Icon(Icons.logout,
-                              size: 18, color: Color(0xFFDC2626)),
+                          const Icon(
+                            Icons.logout,
+                            size: 18,
+                            color: Color(0xFFDC2626),
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Log Out',
@@ -897,6 +1119,80 @@ class _RowAction extends StatelessWidget {
                 size: 18, color: Color(0xFF6B7280)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileStatData {
+  final String value;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ProfileStatData({
+    required this.value,
+    required this.label,
+    required this.onTap,
+  });
+}
+
+class _ProfileMenuData {
+  final String label;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _ProfileMenuData({
+    required this.label,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+  });
+}
+
+class _SearchEmptyState extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SearchEmptyState({
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFDCECFF)),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.search_off_rounded,
+            size: 42,
+            color: Color(0xFF6B7280),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
