@@ -34,6 +34,7 @@ class _ChatPageState extends State<ChatPage> {
 
   final List<_ChatItem> _items = [
     _ChatItem(
+      employeeId: "PGW-001",
       name: "Kaitlyn",
       roleOrStatus: "online",
       lastMessage: "Have a good one!",
@@ -47,6 +48,7 @@ class _ChatPageState extends State<ChatPage> {
       ],
     ),
     _ChatItem(
+      employeeId: "PGW-002",
       name: "Chloe",
       roleOrStatus: "offline",
       lastMessage: "Hello! Are you available for toni...",
@@ -59,6 +61,7 @@ class _ChatPageState extends State<ChatPage> {
       ],
     ),
     _ChatItem(
+      employeeId: "PGW-003",
       name: "X Client",
       roleOrStatus: "online",
       lastMessage: "I’m not gonna pay you.",
@@ -72,6 +75,7 @@ class _ChatPageState extends State<ChatPage> {
       ],
     ),
     _ChatItem(
+      employeeId: "PGW-004",
       name: "Phoebe",
       roleOrStatus: "online",
       lastMessage: "Good bye!",
@@ -84,6 +88,7 @@ class _ChatPageState extends State<ChatPage> {
       ],
     ),
     _ChatItem(
+      employeeId: "PGW-005",
       name: "Jack",
       roleOrStatus: "online",
       lastMessage: "See you again!",
@@ -96,6 +101,7 @@ class _ChatPageState extends State<ChatPage> {
       ],
     ),
     _ChatItem(
+      employeeId: "PGW-006",
       name: "Gibson",
       roleOrStatus: "offline",
       lastMessage: "Okay, Thank you!",
@@ -192,6 +198,14 @@ class _ChatPageState extends State<ChatPage> {
     return int.tryParse(match?.group(1) ?? '0') ?? 0;
   }
 
+  String _formatCurrentTime() {
+    final now = TimeOfDay.now();
+    final hour = now.hourOfPeriod == 0 ? 12 : now.hourOfPeriod;
+    final minute = now.minute.toString().padLeft(2, '0');
+    final period = now.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
   Future<void> _openChatSearchFilter() async {
     _popup.hide();
 
@@ -235,7 +249,7 @@ class _ChatPageState extends State<ChatPage> {
                   TextField(
                     controller: keywordC,
                     decoration: InputDecoration(
-                      hintText: 'Cari nama, pesan, status...',
+                      hintText: 'Cari nama, pesan, status, ID pegawai...',
                       prefixIcon: const Icon(Icons.search),
                       filled: true,
                       fillColor: const Color(0xFFF4F6FB),
@@ -307,12 +321,172 @@ class _ChatPageState extends State<ChatPage> {
       },
     );
 
+    keywordC.dispose();
+
     if (result != null) {
       setState(() {
         _searchC.text = result['keyword'] ?? '';
         _chatFilter = result['filter'] ?? 'Semua';
       });
     }
+  }
+
+  Future<void> _openNewMessageByEmployeeId() async {
+    _popup.hide();
+
+    final idC = TextEditingController();
+    final nameC = TextEditingController();
+
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            16 + MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'New Message',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Buat chat baru menggunakan ID pegawai.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: muted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: idC,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(
+                  labelText: 'ID Pegawai',
+                  hintText: 'Contoh: PGW-001',
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                  filled: true,
+                  fillColor: const Color(0xFFF4F6FB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameC,
+                decoration: InputDecoration(
+                  labelText: 'Nama Pegawai (opsional)',
+                  hintText: 'Contoh: Hanyaka Narendra',
+                  prefixIcon: const Icon(Icons.person_outline),
+                  filled: true,
+                  fillColor: const Color(0xFFF4F6FB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      child: const Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(sheetContext, {
+                          'employeeId': idC.text.trim(),
+                          'name': nameC.text.trim(),
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: navy,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Buat Chat'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    idC.dispose();
+    nameC.dispose();
+
+    if (result == null) return;
+
+    final employeeId = (result['employeeId'] ?? '').trim().toUpperCase();
+    final employeeName = (result['name'] ?? '').trim();
+
+    if (employeeId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ID pegawai wajib diisi.'),
+        ),
+      );
+      return;
+    }
+
+    final existingIndex = _items.indexWhere(
+      (item) => item.employeeId.toLowerCase() == employeeId.toLowerCase(),
+    );
+
+    if (existingIndex != -1) {
+      _segment = 0;
+      _openChat(_items[existingIndex], isGroup: false);
+      return;
+    }
+
+    final newItem = _ChatItem(
+      employeeId: employeeId,
+      name: employeeName.isEmpty ? 'Pegawai $employeeId' : employeeName,
+      roleOrStatus: 'offline',
+      lastMessage: 'Mulai percakapan...',
+      time: _formatCurrentTime(),
+      avatarUrl: '',
+      unread: 0,
+      verified: false,
+      messages: [
+        ChatMessage(
+          text: 'Chat baru dibuat untuk ID pegawai $employeeId.',
+          isMe: false,
+        ),
+      ],
+    );
+
+    setState(() {
+      _segment = 0;
+      _items.insert(0, newItem);
+    });
+
+    _openChat(newItem, isGroup: false);
   }
 
   void _openChat(_ChatItem item, {required bool isGroup}) {
@@ -322,7 +496,9 @@ class _ChatPageState extends State<ChatPage> {
       MaterialPageRoute(
         builder: (_) => ChatingPage(
           chatName: item.name,
-          subtitle: item.roleOrStatus,
+          subtitle: isGroup
+              ? item.roleOrStatus
+              : '${item.roleOrStatus} • ID: ${item.employeeId}',
           isGroup: isGroup,
           avatarUrl: item.avatarUrl,
           initialMessages: item.messages,
@@ -366,6 +542,7 @@ class _ChatPageState extends State<ChatPage> {
     final listData = sourceList.where((item) {
       final textOk = keyword.isEmpty ||
           item.name.toLowerCase().contains(keyword) ||
+          item.employeeId.toLowerCase().contains(keyword) ||
           item.roleOrStatus.toLowerCase().contains(keyword) ||
           item.lastMessage.toLowerCase().contains(keyword);
 
@@ -445,14 +622,7 @@ class _ChatPageState extends State<ChatPage> {
                     _SearchRow(
                       controller: _searchC,
                       onChanged: (_) => setState(() {}),
-                      onNewMessage: () {
-                        _popup.hide();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Fitur New message belum dihubungkan"),
-                          ),
-                        );
-                      },
+                      onNewMessage: _openNewMessageByEmployeeId,
                     ),
                     if (_searchC.text.trim().isNotEmpty ||
                         _chatFilter != 'Semua') ...[
@@ -525,11 +695,12 @@ class _ChatPageState extends State<ChatPage> {
 
                                 return _SwipeTile(
                                   key: ValueKey(
-                                    "${item.name}-${item.time}-$i-$_segment",
+                                    "${item.employeeId}-${item.name}-${item.time}-$i-$_segment",
                                   ),
                                   item: item,
                                   borderColor:
                                       item.highlighted ? blueBadge : border,
+                                  isGroup: _segment == 1,
                                   onTap: () {
                                     _openChat(item, isGroup: _segment == 1);
                                   },
@@ -869,6 +1040,7 @@ class _SearchRow extends StatelessWidget {
 class _SwipeTile extends StatelessWidget {
   final _ChatItem item;
   final Color borderColor;
+  final bool isGroup;
   final VoidCallback onTap;
   final VoidCallback onArchive;
   final VoidCallback onDelete;
@@ -877,6 +1049,7 @@ class _SwipeTile extends StatelessWidget {
     super.key,
     required this.item,
     required this.borderColor,
+    required this.isGroup,
     required this.onTap,
     required this.onArchive,
     required this.onDelete,
@@ -922,7 +1095,7 @@ class _SwipeTile extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            height: 70,
+            height: 82,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: _ChatPageState.card,
@@ -962,7 +1135,19 @@ class _SwipeTile extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
+                      if (!isGroup && item.employeeId.isNotEmpty)
+                        Text(
+                          'ID: ${item.employeeId}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _ChatPageState.blueBadge,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           if (item.verified)
@@ -1068,6 +1253,7 @@ class _ActionBG extends StatelessWidget {
 }
 
 class _ChatItem {
+  final String employeeId;
   final String name;
   final String roleOrStatus;
   final String lastMessage;
@@ -1079,6 +1265,7 @@ class _ChatItem {
   final List<ChatMessage> messages;
 
   const _ChatItem({
+    this.employeeId = '',
     required this.name,
     required this.roleOrStatus,
     required this.lastMessage,
