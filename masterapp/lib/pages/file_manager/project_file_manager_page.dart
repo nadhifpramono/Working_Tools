@@ -57,7 +57,7 @@ class _ProjectFileManagerPageState extends State<ProjectFileManagerPage> {
           child: Column(
             children: [
               _TopBar(
-                title: 'File Manager',
+                title: 'Project Room',
                 subtitle: widget.project.title,
                 onBack: () => Navigator.pop(context),
               ),

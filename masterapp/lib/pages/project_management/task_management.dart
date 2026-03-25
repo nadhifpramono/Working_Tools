@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/project_item.dart';
 import 'document_management.dart';
-import 'note_management.dart';
+import 'notes_shared.dart';
 
 class TaskManagementPage extends StatefulWidget {
   final ProjectItem project;
