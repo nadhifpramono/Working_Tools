@@ -14,6 +14,9 @@ class NegoChatPopup extends StatefulWidget {
     required this.offeredPrice,
   });
 
+  @override
+  State<NegoChatPopup> createState() => _NegoChatPopupState();
+
   static Future<void> show(
     BuildContext context, {
     required String title,
@@ -21,7 +24,7 @@ class NegoChatPopup extends StatefulWidget {
     required int initialPrice,
     required int offeredPrice,
   }) {
-    return showDialog<void>(
+    return showDialog(
       context: context,
       barrierDismissible: true,
       builder: (_) => Dialog(
@@ -36,30 +39,22 @@ class NegoChatPopup extends StatefulWidget {
       ),
     );
   }
-
-  @override
-  State<NegoChatPopup> createState() => _NegoChatPopupState();
 }
 
 class _NegoChatPopupState extends State<NegoChatPopup> {
-  static const Color navy = Color(0xFF101D6E);
-  static const Color primary = Color(0xFF101D6E);
-  static const Color bg = Color(0xFFF4F8FF);
+  static const Color primary = Color(0xFF6B257F);
+  static const Color bg = Color(0xFFF8F5FB);
   static const Color card = Colors.white;
-  static const Color border = Color(0xFFDCE6F8);
+  static const Color border = Color(0xFFE7DCEF);
   static const Color textDark = Color(0xFF1E1E1E);
-  static const Color textMuted = Color(0xFF6B7280);
+  static const Color textMuted = Color(0xFF7A7A7A);
   static const Color success = Color(0xFF16A34A);
   static const Color danger = Color(0xFFDC2626);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color navySoft = Color(0xFF1A2F7A);
-  static const Color navyBox = Color(0xFF243C96);
 
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   late int currentOffer;
-  late String currentStatus;
 
   final List<_ChatItem> messages = [];
 
@@ -67,7 +62,6 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
   void initState() {
     super.initState();
     currentOffer = widget.offeredPrice;
-    currentStatus = 'Menunggu';
 
     messages.addAll([
       _ChatItem(
@@ -76,16 +70,15 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
         time: '09:10',
       ),
       _ChatItem(
-        text:
-            'Baik kak, untuk ${widget.title} harga awalnya Rp ${_formatCurrency(widget.initialPrice)}.',
+        text: 'Baik kak, harga normalnya Rp ${_formatCurrency(widget.initialPrice)}.',
         isMe: true,
         time: '09:11',
       ),
       _ChatItem(
-        text:
-            'Saya ajukan penawaran Rp ${_formatCurrency(widget.offeredPrice)} ya kak.',
+        text: 'Apakah bisa nego jadi Rp ${_formatCurrency(widget.offeredPrice)}?',
         isMe: false,
         time: '09:12',
+        offerPrice: widget.offeredPrice,
       ),
     ]);
   }
@@ -114,24 +107,6 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
     return buffer.toString().split('').reversed.join();
   }
 
-  String _currentTime() {
-    final now = TimeOfDay.now();
-    final hour = now.hour.toString().padLeft(2, '0');
-    final minute = now.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent + 120,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    });
-  }
-
   void _sendMessage() {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
@@ -152,18 +127,15 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
 
   void _sendCounterOffer() {
     setState(() {
-      currentOffer -= 5000;
+      currentOffer = currentOffer - 5000;
       if (currentOffer < 1000) currentOffer = 1000;
-      currentStatus = 'Counter';
 
       messages.add(
         _ChatItem(
-          text:
-              'Saya ajukan counter di harga Rp ${_formatCurrency(currentOffer)} ya kak.',
+          text: 'Saya ajukan harga Rp ${_formatCurrency(currentOffer)} ya kak.',
           isMe: true,
           time: _currentTime(),
-          statusLabel: 'Counter',
-          statusColor: navy,
+          offerPrice: currentOffer,
         ),
       );
     });
@@ -173,15 +145,12 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
 
   void _acceptOffer() {
     setState(() {
-      currentStatus = 'Diterima';
-
       messages.add(
         _ChatItem(
-          text:
-              'Penawaran disetujui. Deal di harga Rp ${_formatCurrency(currentOffer)}.',
+          text: 'Penawaran disetujui. Deal di harga Rp ${_formatCurrency(currentOffer)}.',
           isMe: true,
           time: _currentTime(),
-          statusLabel: 'Diterima',
+          statusLabel: 'Disetujui',
           statusColor: success,
         ),
       );
@@ -192,8 +161,6 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
 
   void _rejectOffer() {
     setState(() {
-      currentStatus = 'Ditolak';
-
       messages.add(
         _ChatItem(
           text: 'Maaf kak, penawaran belum bisa kami terima.',
@@ -208,30 +175,22 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
     _scrollToBottom();
   }
 
-  Color _statusTextColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'diterima':
-        return success;
-      case 'ditolak':
-        return danger;
-      case 'counter':
-        return navy;
-      default:
-        return warning;
-    }
+  String _currentTime() {
+    final now = TimeOfDay.now();
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
-  Color _statusBgColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'diterima':
-        return const Color(0xFFEAF8EE);
-      case 'ditolak':
-        return const Color(0xFFFFE9E9);
-      case 'counter':
-        return const Color(0xFFE8EEFF);
-      default:
-        return const Color(0xFFFFF4D8);
-    }
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent + 120,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   @override
@@ -239,10 +198,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
     final isSmall = MediaQuery.of(context).size.width < 380;
 
     return Container(
-      constraints: const BoxConstraints(
-        maxWidth: 430,
-        maxHeight: 720,
-      ),
+      constraints: const BoxConstraints(maxWidth: 430, maxHeight: 720),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(28),
@@ -256,7 +212,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
       ),
       child: Column(
         children: [
-          _buildHeader(context),
+          _buildHeader(),
           _buildProductInfo(),
           _buildOfferSummary(),
           Expanded(
@@ -285,7 +241,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
       decoration: const BoxDecoration(
@@ -297,11 +253,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
           const CircleAvatar(
             radius: 22,
             backgroundColor: Colors.white24,
-            child: Icon(
-              Icons.handshake_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
+            child: Icon(Icons.handshake_rounded, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -333,10 +285,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
             borderRadius: BorderRadius.circular(99),
             child: const Padding(
               padding: EdgeInsets.all(6),
-              child: Icon(
-                Icons.close_rounded,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.close_rounded, color: Colors.white),
             ),
           ),
         ],
@@ -359,7 +308,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EEFF),
+              color: const Color(0xFFF2EAFE),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
@@ -405,10 +354,10 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
   Widget _buildOfferSummary() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [navySoft, navy],
+          colors: [Color(0xFF7A31A0), Color(0xFF6B257F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -417,33 +366,16 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
       child: Row(
         children: [
           Expanded(
-            child: _summaryBox(
-              'Jenis',
-              widget.title,
-              valueColor: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _summaryBox(
+            child: _priceBox(
               'Harga Awal',
               'Rp ${_formatCurrency(widget.initialPrice)}',
-              valueColor: Colors.white,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
-            child: _summaryBox(
-              'Penawaran',
+            child: _priceBox(
+              'Tawaran Saat Ini',
               'Rp ${_formatCurrency(currentOffer)}',
-              valueColor: const Color(0xFFFFD6D6),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _summaryStatusBox(
-              'Status',
-              currentStatus,
             ),
           ),
         ],
@@ -451,100 +383,32 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
     );
   }
 
-  Widget _summaryBox(
-    String label,
-    String value, {
-    required Color valueColor,
-  }) {
+  Widget _priceBox(String label, String value) {
     return Container(
-      height: 96,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       decoration: BoxDecoration(
-        color: navyBox,
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.white.withOpacity(.14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white24),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Center(
-              child: Text(
-                value,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: valueColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryStatusBox(String label, String status) {
-    return Container(
-      height: 96,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: navyBox,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+          const SizedBox(height: 4),
           Text(
-            label,
-            textAlign: TextAlign.center,
+            value,
             style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: _statusBgColor(status),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  status,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: _statusTextColor(status),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
@@ -553,11 +417,8 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
   }
 
   Widget _buildChatBubble(_ChatItem item, bool isSmall) {
-    final align =
-        item.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final bubbleColor =
-        item.isMe ? const Color(0xFFE8EEFF) : const Color(0xFFF5F5F7);
-
+    final align = item.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final bubbleColor = item.isMe ? const Color(0xFFEEE3F5) : const Color(0xFFF5F5F7);
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(18),
       topRight: const Radius.circular(18),
@@ -583,6 +444,40 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
             crossAxisAlignment:
                 item.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
+              if (item.offerPrice != null) ...[
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFD9C9E8)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Nominal Penawaran',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Rp ${_formatCurrency(item.offerPrice!)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: primary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               Text(
                 item.text,
                 style: const TextStyle(
@@ -603,7 +498,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: item.statusColor!.withOpacity(0.12),
+                        color: item.statusColor!.withOpacity(.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -653,7 +548,7 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
             child: _actionButton(
               label: 'Counter',
               icon: Icons.currency_exchange_rounded,
-              bgColor: const Color(0xFFE8EEFF),
+              bgColor: const Color(0xFFF3E9FF),
               textColor: primary,
               onTap: _sendCounterOffer,
             ),
@@ -736,7 +631,6 @@ class _NegoChatPopupState extends State<NegoChatPopup> {
                     vertical: 13,
                   ),
                 ),
-                onSubmitted: (_) => _sendMessage(),
               ),
             ),
           ),
@@ -764,6 +658,7 @@ class _ChatItem {
   final String text;
   final bool isMe;
   final String time;
+  final int? offerPrice;
   final String? statusLabel;
   final Color? statusColor;
 
@@ -771,6 +666,7 @@ class _ChatItem {
     required this.text,
     required this.isMe,
     required this.time,
+    this.offerPrice,
     this.statusLabel,
     this.statusColor,
   });

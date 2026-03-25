@@ -4,7 +4,11 @@ import '../../models/project_item.dart';
 import 'project_file_manager_page.dart';
 
 class FileManagerHomePage extends StatefulWidget {
-  const FileManagerHomePage({super.key});
+  final bool showBack;
+
+  const FileManagerHomePage({super.key, this.showBack = true});
+
+  const FileManagerHomePage.embedded({super.key}) : showBack = false;
 
   @override
   State<FileManagerHomePage> createState() => _FileManagerHomePageState();
@@ -82,6 +86,7 @@ class _FileManagerHomePageState extends State<FileManagerHomePage> {
           children: [
             _TopBar(
               title: 'File Manager',
+              showBack: widget.showBack,
               onBack: () => Navigator.pop(context),
             ),
             Padding(
@@ -125,9 +130,14 @@ class _FileManagerHomePageState extends State<FileManagerHomePage> {
 
 class _TopBar extends StatelessWidget {
   final String title;
+  final bool showBack;
   final VoidCallback onBack;
 
-  const _TopBar({required this.title, required this.onBack});
+  const _TopBar({
+    required this.title,
+    required this.showBack,
+    required this.onBack,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -135,11 +145,13 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       child: Row(
         children: [
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          ),
-          const SizedBox(width: 6),
+          if (showBack) ...[
+            IconButton(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            ),
+            const SizedBox(width: 6),
+          ],
           Expanded(
             child: Text(
               title,
@@ -358,4 +370,3 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
-

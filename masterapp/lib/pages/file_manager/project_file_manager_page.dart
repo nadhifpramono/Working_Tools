@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../models/file_manager_entry.dart';
 import '../../models/project_item.dart';
 import 'file_manager.dart';
 
@@ -19,6 +21,9 @@ class _ProjectFileManagerPageState extends State<ProjectFileManagerPage> {
   static const Color MUTED = Color(0xFF5E5E5E);
 
   final TextEditingController _searchC = TextEditingController();
+  final ValueNotifier<FileManagerEntry?> _selected = ValueNotifier(null);
+  final ValueNotifier<String?> _currentFolderId = ValueNotifier(null);
+  final Map<String, List<_FileContextChatMessage>> _messagesByContext = {};
 
   String _projectKey() {
     final lower = widget.project.title.trim().toLowerCase();
@@ -31,46 +36,313 @@ class _ProjectFileManagerPageState extends State<ProjectFileManagerPage> {
   @override
   void dispose() {
     _searchC.dispose();
+    _selected.dispose();
+    _currentFolderId.dispose();
     super.dispose();
+  }
+
+  String _contextKey(String projectKey, FileManagerEntry? selected) {
+    return '$projectKey:${selected?.id ?? 'root'}';
   }
 
   @override
   Widget build(BuildContext context) {
+    final projectKey = _projectKey();
+
     return Scaffold(
       backgroundColor: BG,
       body: SafeArea(
-        child: Column(
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              _TopBar(
+                title: 'File Manager',
+                subtitle: widget.project.title,
+                onBack: () => Navigator.pop(context),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+                child: TabBar(
+                  indicatorColor: NAVY,
+                  labelColor: NAVY,
+                  unselectedLabelColor: MUTED,
+                  labelStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  tabs: const [
+                    Tab(text: 'Activity'),
+                    Tab(text: 'Chat'),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                          child: _SearchBox(
+                            controller: _searchC,
+                            hint: 'Search files & folders',
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView(
+                            padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
+                            children: [
+                              ProjectFilesView(
+                                projectKey: projectKey,
+                                query: _searchC.text,
+                                navy: NAVY,
+                                card: CARD,
+                                muted: MUTED,
+                                onContextChanged: (selected, folderId) {
+                                  _selected.value = selected as FileManagerEntry?;
+                                  _currentFolderId.value = folderId as String?;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    _FileContextChatTab(
+                      projectKey: projectKey,
+                      navy: NAVY,
+                      muted: MUTED,
+                      selectedListenable: _selected,
+                      messagesByContext: _messagesByContext,
+                      contextKeyFor: (selected) =>
+                          _contextKey(projectKey, selected),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FileContextChatMessage {
+  final String text;
+  final bool isMe;
+  final DateTime at;
+
+  const _FileContextChatMessage({
+    required this.text,
+    required this.isMe,
+    required this.at,
+  });
+}
+
+class _FileContextChatTab extends StatefulWidget {
+  final String projectKey;
+  final Color navy;
+  final Color muted;
+  final ValueListenable<FileManagerEntry?> selectedListenable;
+  final Map<String, List<_FileContextChatMessage>> messagesByContext;
+  final String Function(FileManagerEntry? selected) contextKeyFor;
+
+  const _FileContextChatTab({
+    required this.projectKey,
+    required this.navy,
+    required this.muted,
+    required this.selectedListenable,
+    required this.messagesByContext,
+    required this.contextKeyFor,
+  });
+
+  @override
+  State<_FileContextChatTab> createState() => _FileContextChatTabState();
+}
+
+class _FileContextChatTabState extends State<_FileContextChatTab> {
+  final TextEditingController _inputC = TextEditingController();
+  final ScrollController _scrollC = ScrollController();
+
+  @override
+  void dispose() {
+    _inputC.dispose();
+    _scrollC.dispose();
+    super.dispose();
+  }
+
+  void _send(String contextKey) {
+    final text = _inputC.text.trim();
+    if (text.isEmpty) return;
+
+    final list = widget.messagesByContext.putIfAbsent(contextKey, () => []);
+    setState(() {
+      list.add(
+        _FileContextChatMessage(text: text, isMe: true, at: DateTime.now()),
+      );
+      _inputC.clear();
+    });
+
+    // Scroll after layout.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollC.hasClients) return;
+      _scrollC.animateTo(
+        _scrollC.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<FileManagerEntry?>(
+      valueListenable: widget.selectedListenable,
+      builder: (context, selected, _) {
+        final contextKey = widget.contextKeyFor(selected);
+        final messages = widget.messagesByContext[contextKey] ?? const [];
+
+        final title = selected == null
+            ? 'Root'
+            : selected.isFolder
+                ? 'Folder: ${selected.name}'
+                : 'File: ${selected.name}${selected.extension}';
+
+        return Column(
           children: [
-            _TopBar(
-              title: 'File Manager',
-              subtitle: widget.project.title,
-              onBack: () => Navigator.pop(context),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-              child: _SearchBox(
-                controller: _searchC,
-                hint: 'Search files & folders',
-                onChanged: (_) => setState(() {}),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: widget.navy.withOpacity(0.10),
+                    child: Icon(
+                      selected == null
+                          ? Icons.home_rounded
+                          : selected.isFolder
+                              ? Icons.folder_rounded
+                              : Icons.insert_drive_file_rounded,
+                      color: widget.navy,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
+              child: messages.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Belum ada chat untuk context ini.',
+                        style: TextStyle(
+                          color: widget.muted,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollC,
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                      itemCount: messages.length,
+                      itemBuilder: (context, i) {
+                        final m = messages[i];
+                        final align = m.isMe
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft;
+                        final bg = m.isMe
+                            ? widget.navy.withOpacity(0.10)
+                            : Colors.white;
+                        final border = m.isMe
+                            ? widget.navy.withOpacity(0.20)
+                            : Colors.black12;
+                        return Align(
+                          alignment: align,
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 320),
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: bg,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: border),
+                            ),
+                            child: Text(
+                              m.text,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              child: Row(
                 children: [
-                  ProjectFilesView(
-                    projectKey: _projectKey(),
-                    query: _searchC.text,
-                    navy: NAVY,
-                    card: CARD,
-                    muted: MUTED,
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFDCECFF)),
+                      ),
+                      child: TextField(
+                        controller: _inputC,
+                        minLines: 1,
+                        maxLines: 4,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _send(contextKey),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Tulis pesan...',
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    style:
+                        FilledButton.styleFrom(backgroundColor: widget.navy),
+                    onPressed: () => _send(contextKey),
+                    child: const Icon(Icons.send_rounded),
                   ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -186,4 +458,3 @@ class _SearchBox extends StatelessWidget {
     );
   }
 }
-

@@ -4,8 +4,9 @@ import '../inventory/inventory.dart';
 import '../inventory/updateinventory.dart';
 import '../project_management/project_management.dart';
 import '../notifications/notification.dart';
-import '../file_manager/file_manager_home.dart';
 import '../chat/chat.dart';
+import '../file_manager/file_manager_home.dart';
+
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -61,7 +62,7 @@ class _DashboardPageState extends State<DashboardPage> {
             onTapNotification: _openNotificationPage,
           ),
           const ChatPage(),
-          const _PlaceholderPage(title: 'File Manager'),
+          const FileManagerHomePage.embedded(),
           const ProfilePage(),
         ],
       ),
@@ -272,7 +273,7 @@ class _DashboardHomeBody extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const ProjectManagementPage(),
+                                  builder: (_) => const FileManagerHomePage(),
                                 ),
                               );
                             },

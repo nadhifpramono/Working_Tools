@@ -329,7 +329,7 @@ class _StockOutPageState extends State<StockOutPage> {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       decoration: InputDecoration(
         filled: true,
@@ -482,7 +482,7 @@ class _StockOutPageState extends State<StockOutPage> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final category = _categories[index];
                         final active = _selectedCategory == category;
@@ -532,7 +532,7 @@ class _StockOutPageState extends State<StockOutPage> {
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final item = items[index];
 
