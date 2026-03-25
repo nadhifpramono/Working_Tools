@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'editprofile.dart';
 import '../notifications/notification.dart';
-import 'stockout.dart';
-import 'stockin.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -14,8 +12,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   static const Color NAVY = Color(0xFF101D6E);
   static const Color BG = Color(0xFFF2F9FF);
-  static const Color CARD = Color(0xFFFAFEFF);
-  static const Color SOFT = Color(0xFFF4F5FF);
   static const Color BORDER = Color(0xFFDCECFF);
   static const Color TEXT = Color(0xFF111827);
 
@@ -35,9 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _popup.hide();
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const NotificationPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const NotificationPage()),
     );
   }
 
@@ -122,135 +116,50 @@ class _ProfilePageState extends State<ProfilePage> {
                         );
                       },
                     ),
-                    const SizedBox(height: 14),
 
-                    // QUICK STATS PROFILE
-                    LayoutBuilder(
-                      builder: (context, c) {
-                        const spacing = 12.0;
-                        final itemW = (c.maxWidth - spacing * 3) / 4;
-                        final itemH = isTablet ? 96.0 : 78.0;
+                    const SizedBox(height: 20),
 
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '24',
-                              label: 'Pending',
-                              onTap: () => _popup.hide(),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: BORDER),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Informasi Akun',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: TEXT,
                             ),
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '8',
-                              label: 'Service',
-                              onTap: () => _popup.hide(),
-                            ),
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '11',
-                              label: 'Stock Out',
-                              onTap: () {
-                                _popup.hide();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const StockOutPage(),
-                                  ),
-                                );
-                              },
-                            ),
-                            _StatQuickButton(
-                              width: itemW,
-                              height: itemH,
-                              color: NAVY,
-                              value: '19',
-                              label: 'Stock In',
-                              onTap: () {
-                                _popup.hide();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const StockInPage(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
+                          ),
+                          const SizedBox(height: 12),
+                          _InfoRow(
+                            icon: Icons.person_outline,
+                            label: 'Nama',
+                            value: 'Hanyakra Narendra',
+                          ),
+                          const SizedBox(height: 10),
+                          _InfoRow(
+                            icon: Icons.badge_outlined,
+                            label: 'Jabatan',
+                            value: 'Supervisor',
+                          ),
+                          const SizedBox(height: 10),
+                          _InfoRow(
+                            icon: Icons.language_outlined,
+                            label: 'Bahasa',
+                            value: _language,
+                          ),
+                        ],
+                      ),
                     ),
 
-                    const SizedBox(height: 16),
-
-                    _MenuGroupCard(
-                      children: [
-                        _MenuRow(
-                          icon: Icons.build_outlined,
-                          iconColor: Colors.black,
-                          label: 'Service',
-                          onTap: () => _popup.hide(),
-                        ),
-                        const _DividerLine(),
-                        _MenuRow(
-                          icon: Icons.check_circle,
-                          iconColor: Color(0xFF16A34A),
-                          label: 'Available',
-                          onTap: () => _popup.hide(),
-                        ),
-                        const _DividerLine(),
-                        _MenuRow(
-                          icon: Icons.history,
-                          iconColor: Colors.black,
-                          label: 'History',
-                          onTap: () => _popup.hide(),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    _MenuGroupCard(
-                      children: [
-                        _MenuRow(
-                          icon: Icons.outbox_outlined,
-                          iconColor: Colors.black,
-                          label: 'Stock out',
-                          onTap: () {
-                            _popup.hide();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const StockOutPage(),
-                              ),
-                            );
-                          },
-                        ),
-                        const _DividerLine(),
-                        _MenuRow(
-                          icon: Icons.inventory_2_outlined,
-                          iconColor: Colors.black,
-                          label: 'Stock in',
-                          onTap: () {
-                            _popup.hide();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const StockInPage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
 
                     Row(
                       children: [
@@ -267,13 +176,56 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                     const SizedBox(height: 10),
+
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: BORDER),
+                      ),
+                      child: Column(
+                        children: [
+                          _SimpleMenuRow(
+                            icon: Icons.support_agent,
+                            label: 'Pusat Bantuan',
+                            onTap: () {
+                              _popup.hide();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Buka pusat bantuan'),
+                                ),
+                              );
+                            },
+                          ),
+                          const _DividerLine(),
+                          _SimpleMenuRow(
+                            icon: Icons.info_outline,
+                            label: 'Tentang Aplikasi',
+                            onTap: () {
+                              _popup.hide();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Buka informasi aplikasi'),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
                     InkWell(
                       onTap: () => _popup.hide(),
                       borderRadius: BorderRadius.circular(10),
                       child: Row(
                         children: [
-                          const Icon(Icons.logout,
-                              size: 18, color: Color(0xFFDC2626)),
+                          const Icon(
+                            Icons.logout,
+                            size: 18,
+                            color: Color(0xFFDC2626),
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Log Out',
@@ -286,6 +238,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 90),
                   ],
                 ),
@@ -387,133 +340,67 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
-class _StatQuickButton extends StatelessWidget {
-  final double width;
-  final double height;
-  final Color color;
-  final String value;
-  final String label;
-  final VoidCallback onTap;
-
-  const _StatQuickButton({
-    required this.width,
-    required this.height,
-    required this.color,
-    required this.value,
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
     required this.label,
-    required this.onTap,
+    required this.value,
   });
+
+  final IconData icon;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final isSmall = height < 85;
-
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(15),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.15),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          width: width,
-          height: height,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color,
-                color.withOpacity(0.92),
-              ],
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF111827)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: Color(0xFF6B7280),
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isSmall ? 18 : 24,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isSmall ? 11 : 13,
-                  fontWeight: FontWeight.w700,
-                  height: 1.1,
-                ),
-              ),
-            ],
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            color: Color(0xFF111827),
           ),
         ),
-      ),
+      ],
     );
   }
 }
 
-class _MenuGroupCard extends StatelessWidget {
-  final List<Widget> children;
-  static const Color CARD = Color(0xFFFAFEFF);
-
-  const _MenuGroupCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: CARD,
-      borderRadius: BorderRadius.circular(16),
-      elevation: 1.5,
-      shadowColor: Colors.black.withOpacity(0.07),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E0E0), width: 1),
-        ),
-        child: Column(children: children),
-      ),
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final VoidCallback onTap;
-
-  const _MenuRow({
+class _SimpleMenuRow extends StatelessWidget {
+  const _SimpleMenuRow({
     required this.icon,
-    required this.iconColor,
     required this.label,
     required this.onTap,
   });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: iconColor),
+            Icon(icon, size: 22, color: Colors.black),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -524,6 +411,10 @@ class _MenuRow extends StatelessWidget {
                   color: Color(0xFF111827),
                 ),
               ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFF6B7280),
             ),
           ],
         ),
@@ -540,7 +431,7 @@ class _DividerLine extends StatelessWidget {
     return Container(
       height: 1,
       color: const Color(0xFFE5E7EB),
-      margin: const EdgeInsets.symmetric(vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 12),
     );
   }
 }

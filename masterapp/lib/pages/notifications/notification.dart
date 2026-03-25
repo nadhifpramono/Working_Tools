@@ -237,22 +237,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 ],
               ),
             ),
-            IconButton(
-              onPressed: () => _openSimpleDetail("Semua Notifikasi"),
-              icon: const Icon(
-                Icons.notifications,
-                color: Colors.black,
-                size: 24,
-              ),
-            ),
-            IconButton(
-              onPressed: () => _openSimpleDetail("Pengaturan"),
-              icon: const Icon(
-                Icons.settings,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
+           
           ],
         ),
       ),
