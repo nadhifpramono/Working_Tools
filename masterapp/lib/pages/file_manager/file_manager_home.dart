@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/project_item.dart';
 import 'project_file_manager_page.dart';
+import '../sidebar/app_sidebar.dart';
 
 class FileManagerHomePage extends StatefulWidget {
   final bool showBack;
@@ -23,6 +24,7 @@ class _FileManagerHomePageState extends State<FileManagerHomePage> {
   static const Color TRACK = Color(0xFFC5C5C5);
 
   final TextEditingController _searchC = TextEditingController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<ProjectItem> _items = const [
     ProjectItem(
@@ -80,13 +82,18 @@ class _FileManagerHomePageState extends State<FileManagerHomePage> {
     final visible = _filtered();
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: BG,
+      drawer: const WorkingToolsSidebar(
+        activeMenu: WorkingToolsMenu.fileManager,
+      ),
       body: SafeArea(
         child: Column(
           children: [
             _TopBar(
               title: 'File Manager',
               showBack: widget.showBack,
+              onMenu: () => _scaffoldKey.currentState?.openDrawer(),
               onBack: () => Navigator.pop(context),
             ),
             Padding(
@@ -131,11 +138,13 @@ class _FileManagerHomePageState extends State<FileManagerHomePage> {
 class _TopBar extends StatelessWidget {
   final String title;
   final bool showBack;
+  final VoidCallback onMenu;
   final VoidCallback onBack;
 
   const _TopBar({
     required this.title,
     required this.showBack,
+    required this.onMenu,
     required this.onBack,
   });
 
@@ -145,6 +154,10 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       child: Row(
         children: [
+          IconButton(
+            onPressed: onMenu,
+            icon: const Icon(Icons.menu_rounded),
+          ),
           if (showBack) ...[
             IconButton(
               onPressed: onBack,
@@ -342,7 +355,11 @@ class _MetaChip extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _MetaChip({required this.icon, required this.label, required this.color});
+  const _MetaChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {

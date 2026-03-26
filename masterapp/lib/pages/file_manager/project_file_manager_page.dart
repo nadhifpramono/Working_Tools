@@ -98,8 +98,8 @@ class _ProjectFileManagerPageState extends State<ProjectFileManagerPage> {
                                 card: CARD,
                                 muted: MUTED,
                                 onContextChanged: (selected, folderId) {
-                                  _selected.value = selected as FileManagerEntry?;
-                                  _currentFolderId.value = folderId as String?;
+                                  _selected.value = selected;
+                                  _currentFolderId.value = folderId;
                                 },
                               ),
                             ],

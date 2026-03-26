@@ -17,26 +17,13 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   static const Color bg = Color(0xFFF2F9FF);
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   int _navIndex = 0;
-
-  final LayerLink _settingsLink = LayerLink();
-  final SettingsPopupController _popup = SettingsPopupController();
-
-  bool _darkMode = false;
-  bool _pinEnabled = false;
-  String _language = 'Indonesia';
-
   String _dashboardKeyword = '';
   String _dashboardFilter = 'Semua';
 
-  @override
-  void dispose() {
-    _popup.hide();
-    super.dispose();
-  }
-
   void _openNotificationPage() {
-    _popup.hide();
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -53,8 +40,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _openDashboardSearch() async {
-    _popup.hide();
-
     final keywordC = TextEditingController(text: _dashboardKeyword);
     String selectedFilter = _dashboardFilter;
 
@@ -78,86 +63,89 @@ class _DashboardPageState extends State<DashboardPage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Search Dashboard',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: keywordC,
-                    decoration: InputDecoration(
-                      hintText: 'Cari menu, aktivitas, statistik...',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: const Color(0xFFF4F6FB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Search Dashboard',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Filter',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: filters.map((filter) {
-                      return ChoiceChip(
-                        label: Text(filter),
-                        selected: selectedFilter == filter,
-                        onSelected: (_) {
-                          setSheetState(() => selectedFilter = filter);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(sheetContext, {
-                              'keyword': '',
-                              'filter': 'Semua',
-                            });
-                          },
-                          child: const Text('Reset'),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: keywordC,
+                      decoration: InputDecoration(
+                        hintText: 'Cari menu, aktivitas, statistik...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: const Color(0xFFF4F6FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(sheetContext, {
-                              'keyword': keywordC.text.trim(),
-                              'filter': selectedFilter,
-                            });
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Filter',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: filters.map((filter) {
+                        return ChoiceChip(
+                          label: Text(filter),
+                          selected: selectedFilter == filter,
+                          onSelected: (_) {
+                            setSheetState(() => selectedFilter = filter);
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF101D6E),
-                            foregroundColor: Colors.white,
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(sheetContext, {
+                                'keyword': '',
+                                'filter': 'Semua',
+                              });
+                            },
+                            child: const Text('Reset'),
                           ),
-                          child: const Text('Terapkan'),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(sheetContext, {
+                                'keyword': keywordC.text.trim(),
+                                'filter': selectedFilter,
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF101D6E),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Terapkan'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -173,37 +161,435 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  void _openSidebarFeature({
+    required String title,
+    required IconData icon,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _FeaturePage(
+          title: title,
+          icon: icon,
+          sections: _getFeatureSections(title),
+        ),
+      ),
+    );
+  }
+
+  List<_FeatureSectionData> _getFeatureSections(String title) {
+    switch (title) {
+      case 'My Work':
+        return const [
+          _FeatureSectionData(
+            title: 'Prioritas Hari Ini',
+            items: [
+              _FeatureItemData(
+                title: 'Review dokumen tender',
+                subtitle: 'Deadline hari ini • 14:00',
+                detail:
+                    'Dokumen tender perlu dicek ulang sebelum dikirim. Fokus pada kelengkapan berkas, nominal, dan lampiran pendukung.',
+                icon: Icons.description_outlined,
+                badge: 'High',
+              ),
+              _FeatureItemData(
+                title: 'Follow up approval pembelian',
+                subtitle: 'Menunggu persetujuan manager',
+                detail:
+                    'Tindak lanjuti approval pembelian alat kerja dan pastikan semua vendor quotation sudah lengkap.',
+                icon: Icons.approval_outlined,
+                badge: 'Pending',
+              ),
+            ],
+          ),
+          _FeatureSectionData(
+            title: 'Progress Mingguan',
+            items: [
+              _FeatureItemData(
+                title: 'Update progress dashboard',
+                subtitle: 'Progress 75%',
+                detail:
+                    'Halaman dashboard hampir selesai. Sisa pekerjaan fokus pada responsive layout dan final QA.',
+                icon: Icons.dashboard_outlined,
+                badge: '75%',
+              ),
+              _FeatureItemData(
+                title: 'Monitoring task tim',
+                subtitle: '5 task aktif',
+                detail:
+                    'Pantau task anggota tim, cek blocker, dan bantu distribusi workload bila diperlukan.',
+                icon: Icons.groups_outlined,
+                badge: '5',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Task':
+        return const [
+          _FeatureSectionData(
+            title: 'To Do',
+            items: [
+              _FeatureItemData(
+                title: 'Buat laporan mingguan',
+                subtitle: 'Belum dimulai',
+                detail:
+                    'Susun laporan mingguan berisi progres kerja, hambatan, dan rencana minggu berikutnya.',
+                icon: Icons.assignment_outlined,
+                badge: 'Todo',
+              ),
+              _FeatureItemData(
+                title: 'Cek stok safety equipment',
+                subtitle: 'Perlu verifikasi gudang',
+                detail:
+                    'Lakukan pengecekan stok perlengkapan safety untuk memastikan data inventory sesuai kondisi lapangan.',
+                icon: Icons.inventory_2_outlined,
+                badge: 'Todo',
+              ),
+            ],
+          ),
+          _FeatureSectionData(
+            title: 'In Progress',
+            items: [
+              _FeatureItemData(
+                title: 'Revisi halaman inventory',
+                subtitle: 'Sedang dikerjakan',
+                detail:
+                    'Perubahan fokus pada quick stats, fitur shortcut, dan struktur scroll agar semua bagian ikut bergerak.',
+                icon: Icons.build_circle_outlined,
+                badge: 'Progress',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Meeting':
+        return const [
+          _FeatureSectionData(
+            title: 'Hari Ini',
+            items: [
+              _FeatureItemData(
+                title: 'Daily standup',
+                subtitle: '09:00 - 09:30',
+                detail:
+                    'Bahas progres kemarin, target hari ini, dan hambatan utama yang perlu dibantu tim.',
+                icon: Icons.today_outlined,
+                badge: 'Today',
+              ),
+              _FeatureItemData(
+                title: 'Koordinasi vendor',
+                subtitle: '13:30 - 14:30',
+                detail:
+                    'Meeting untuk membahas timeline pengadaan, harga final, dan dokumen vendor.',
+                icon: Icons.handshake_outlined,
+                badge: 'Vendor',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Notepad':
+        return const [
+          _FeatureSectionData(
+            title: 'Quick Notes',
+            items: [
+              _FeatureItemData(
+                title: 'Catatan follow up klien',
+                subtitle: '3 poin penting',
+                detail:
+                    'Klien meminta revisi layout, tambahan estimasi biaya, dan penyesuaian deadline presentasi.',
+                icon: Icons.note_outlined,
+                badge: 'Quick',
+              ),
+              _FeatureItemData(
+                title: 'Checklist lapangan',
+                subtitle: 'Persiapan inspeksi',
+                detail:
+                    'Checklist lapangan berisi APD, alat ukur, lembar inspeksi, dokumentasi foto, dan approval supervisor.',
+                icon: Icons.fact_check_outlined,
+                badge: 'Check',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Notes':
+        return const [
+          _FeatureSectionData(
+            title: 'Project Notes',
+            items: [
+              _FeatureItemData(
+                title: 'Catatan UI Inventory',
+                subtitle: 'Versi revisi 2',
+                detail:
+                    'Perubahan fokus pada quick stats, shortcut fitur, dan body scroll tunggal agar layout lebih natural.',
+                icon: Icons.design_services_outlined,
+                badge: 'UI',
+              ),
+              _FeatureItemData(
+                title: 'Catatan backend integrasi',
+                subtitle: 'Node + Flutter',
+                detail:
+                    'Pastikan API response konsisten, validasi error jelas, dan file upload memakai endpoint yang stabil.',
+                icon: Icons.settings_ethernet_outlined,
+                badge: 'API',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Arsip':
+        return const [
+          _FeatureSectionData(
+            title: 'Arsip Dokumen',
+            items: [
+              _FeatureItemData(
+                title: 'Dokumen project selesai',
+                subtitle: '12 file tersimpan',
+                detail:
+                    'Berisi dokumen project yang sudah closed, termasuk laporan akhir dan lampiran pendukung.',
+                icon: Icons.folder_copy_outlined,
+                badge: '12',
+              ),
+              _FeatureItemData(
+                title: 'Invoice lama',
+                subtitle: 'Periode Januari - Maret',
+                detail:
+                    'Invoice lama dipindahkan ke arsip untuk memudahkan pencarian dan audit data keuangan.',
+                icon: Icons.receipt_long_outlined,
+                badge: 'Q1',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Archive':
+        return const [
+          _FeatureSectionData(
+            title: 'Backup & Bundles',
+            items: [
+              _FeatureItemData(
+                title: 'Backup database',
+                subtitle: 'Terakhir diperbarui kemarin',
+                detail:
+                    'Backup data dilakukan rutin untuk menjaga keamanan data dan memudahkan restore saat dibutuhkan.',
+                icon: Icons.backup_outlined,
+                badge: 'Safe',
+              ),
+              _FeatureItemData(
+                title: 'ZIP dokumen vendor',
+                subtitle: '8 bundle arsip',
+                detail:
+                    'Dokumen vendor yang sudah tidak aktif disimpan dalam format ZIP untuk efisiensi storage.',
+                icon: Icons.folder_zip_outlined,
+                badge: 'ZIP',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Activity Log':
+        return const [
+          _FeatureSectionData(
+            title: 'Aktivitas User',
+            items: [
+              _FeatureItemData(
+                title: 'Admin update inventory',
+                subtitle: 'Hari ini • 09:10',
+                detail:
+                    'Admin melakukan update jumlah stok dan perubahan status item inventory.',
+                icon: Icons.inventory_2_outlined,
+                badge: 'Today',
+              ),
+              _FeatureItemData(
+                title: 'User login dari tablet',
+                subtitle: 'Hari ini • 07:45',
+                detail:
+                    'Terjadi aktivitas login dari perangkat tablet yang terhubung ke sistem absensi.',
+                icon: Icons.tablet_mac_outlined,
+                badge: 'Login',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Reports':
+        return const [
+          _FeatureSectionData(
+            title: 'Laporan Utama',
+            items: [
+              _FeatureItemData(
+                title: 'Laporan harian operasional',
+                subtitle: 'Generate PDF / Excel',
+                detail:
+                    'Laporan ini berisi aktivitas operasional harian, jumlah task selesai, dan update penting lainnya.',
+                icon: Icons.picture_as_pdf_outlined,
+                badge: 'Daily',
+              ),
+              _FeatureItemData(
+                title: 'Laporan inventory',
+                subtitle: 'Stock in / Stock out',
+                detail:
+                    'Berisi data pergerakan stok, item tersedia, item habis, dan histori perubahan inventory.',
+                icon: Icons.summarize_outlined,
+                badge: 'Stock',
+              ),
+            ],
+          ),
+        ];
+
+      case 'Help Center':
+        return const [
+          _FeatureSectionData(
+            title: 'Bantuan Cepat',
+            items: [
+              _FeatureItemData(
+                title: 'Cara menambah item inventory',
+                subtitle: 'Panduan singkat',
+                detail:
+                    'Masuk ke halaman Inventory, tekan tombol Tambah Item, lalu isi nama, kategori, jumlah, dan status barang.',
+                icon: Icons.inventory_outlined,
+                badge: 'Guide',
+              ),
+              _FeatureItemData(
+                title: 'Cara export laporan',
+                subtitle: 'PDF dan Excel',
+                detail:
+                    'Masuk ke halaman Reports, pilih jenis laporan, atur periode, lalu pilih format export yang diinginkan.',
+                icon: Icons.file_download_outlined,
+                badge: 'Export',
+              ),
+            ],
+          ),
+        ];
+
+      default:
+        return const [
+          _FeatureSectionData(
+            title: 'Informasi',
+            items: [
+              _FeatureItemData(
+                title: 'Fitur siap digunakan',
+                subtitle: 'Silakan pilih item',
+                detail:
+                    'Fitur ini sudah aktif. Kamu bisa tekan item untuk melihat detail isi.',
+                icon: Icons.info_outline,
+                badge: 'Ready',
+              ),
+            ],
+          ),
+        ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: bg,
+      drawer: _AppSidebar(
+        onTapProfile: () {
+          Navigator.pop(context);
+          setState(() => _navIndex = 3);
+        },
+        onTapSettings: () {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const _SettingsPage()),
+          );
+        },
+        onTapHelpCenter: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Help Center',
+            icon: Icons.help_outline,
+          );
+        },
+        onTapMyWork: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'My Work',
+            icon: Icons.work_outline,
+          );
+        },
+        onTapTask: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Task',
+            icon: Icons.task_alt_outlined,
+          );
+        },
+        onTapMeeting: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Meeting',
+            icon: Icons.groups_2_outlined,
+          );
+        },
+        onTapNotepad: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Notepad',
+            icon: Icons.sticky_note_2_outlined,
+          );
+        },
+        onTapNotes: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Notes',
+            icon: Icons.note_alt_outlined,
+          );
+        },
+        onTapArsip: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Arsip',
+            icon: Icons.archive_outlined,
+          );
+        },
+        onTapArchive: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Archive',
+            icon: Icons.folder_zip_outlined,
+          );
+        },
+        onTapActivityLog: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Activity Log',
+            icon: Icons.history,
+          );
+        },
+        onTapReports: () {
+          Navigator.pop(context);
+          _openSidebarFeature(
+            title: 'Reports',
+            icon: Icons.assessment_outlined,
+          );
+        },
+      ),
       body: IndexedStack(
         index: _navIndex,
         children: [
           _DashboardHomeBody(
-            settingsLink: _settingsLink,
-            popup: _popup,
-            darkMode: _darkMode,
-            pinEnabled: _pinEnabled,
-            language: _language,
-            onDarkModeChanged: (v) => setState(() => _darkMode = v),
-            onPinChanged: (v) => setState(() => _pinEnabled = v),
-            onLanguageChanged: (v) => setState(() => _language = v),
+            onTapMenu: () => _scaffoldKey.currentState?.openDrawer(),
             onTapNotification: _openNotificationPage,
             onTapSearch: _openDashboardSearch,
             onClearSearch: _clearDashboardSearch,
+            onTapProfileShortcut: () => setState(() => _navIndex = 3),
             searchKeyword: _dashboardKeyword,
             searchFilter: _dashboardFilter,
           ),
-          const ChatPage(),
-          const _PlaceholderPage(title: 'File Manager'),
+          ChatPage(),
+          FileManagerHomePage(),
           const ProfilePage(),
         ],
       ),
       bottomNavigationBar: _BottomNav(
         currentIndex: _navIndex,
         onTap: (i) {
-          _popup.hide();
           setState(() => _navIndex = i);
         },
       ),
@@ -212,34 +598,20 @@ class _DashboardPageState extends State<DashboardPage> {
 }
 
 class _DashboardHomeBody extends StatelessWidget {
-  final LayerLink settingsLink;
-  final SettingsPopupController popup;
-
-  final bool darkMode;
-  final bool pinEnabled;
-  final String language;
-
-  final ValueChanged<bool> onDarkModeChanged;
-  final ValueChanged<bool> onPinChanged;
-  final ValueChanged<String> onLanguageChanged;
+  final VoidCallback onTapMenu;
   final VoidCallback onTapNotification;
   final VoidCallback onTapSearch;
   final VoidCallback onClearSearch;
+  final VoidCallback onTapProfileShortcut;
   final String searchKeyword;
   final String searchFilter;
 
   const _DashboardHomeBody({
-    required this.settingsLink,
-    required this.popup,
-    required this.darkMode,
-    required this.pinEnabled,
-    required this.language,
-    required this.onDarkModeChanged,
-    required this.onPinChanged,
-    required this.onLanguageChanged,
+    required this.onTapMenu,
     required this.onTapNotification,
     required this.onTapSearch,
     required this.onClearSearch,
+    required this.onTapProfileShortcut,
     required this.searchKeyword,
     required this.searchFilter,
   });
@@ -271,11 +643,10 @@ class _DashboardHomeBody extends StatelessWidget {
         value: '5',
         label: 'Projects',
         onTap: () {
-          popup.hide();
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const ProjectManagementPage(),
+              builder: (_) => ProjectManagementPage(),
             ),
           );
         },
@@ -289,11 +660,10 @@ class _DashboardHomeBody extends StatelessWidget {
         label: 'file manager',
         icon: Icons.description_outlined,
         onTap: () {
-          popup.hide();
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const FileManagerHomePage(),
+              builder: (_) => FileManagerHomePage(),
             ),
           );
         },
@@ -302,11 +672,10 @@ class _DashboardHomeBody extends StatelessWidget {
         label: 'project management',
         icon: Icons.assignment_outlined,
         onTap: () {
-          popup.hide();
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const ProjectManagementPage(),
+              builder: (_) => ProjectManagementPage(),
             ),
           );
         },
@@ -315,11 +684,10 @@ class _DashboardHomeBody extends StatelessWidget {
         label: 'inventory',
         icon: Icons.inventory_2_outlined,
         onTap: () {
-          popup.hide();
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const InventoryPage(),
+              builder: (_) => InventoryPage(),
             ),
           );
         },
@@ -327,17 +695,29 @@ class _DashboardHomeBody extends StatelessWidget {
       _DashboardMenuData(
         label: 'notes',
         icon: Icons.event_note_outlined,
-        onTap: () {},
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Halaman notes ada di sidebar')),
+          );
+        },
       ),
       _DashboardMenuData(
         label: 'finance',
         icon: Icons.account_balance_wallet_outlined,
-        onTap: () {},
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Halaman finance belum dibuat')),
+          );
+        },
       ),
       _DashboardMenuData(
         label: 'service all',
         icon: Icons.grid_view_rounded,
-        onTap: () {},
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Service all ditekan')),
+          );
+        },
       ),
     ];
 
@@ -386,6 +766,12 @@ class _DashboardHomeBody extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
+                  IconButton(
+                    onPressed: onTapMenu,
+                    icon: const Icon(Icons.menu_rounded),
+                    color: Colors.white,
+                    tooltip: 'Menu',
+                  ),
                   Expanded(
                     child: Text(
                       'Dasboard (home page)',
@@ -408,28 +794,6 @@ class _DashboardHomeBody extends StatelessWidget {
                     color: Colors.white,
                     tooltip: 'Notifications',
                   ),
-                  CompositedTransformTarget(
-                    link: settingsLink,
-                    child: InkWell(
-                      onTap: () {
-                        popup.show(
-                          context: context,
-                          link: settingsLink,
-                          darkMode: darkMode,
-                          pinEnabled: pinEnabled,
-                          language: language,
-                          onDarkModeChanged: onDarkModeChanged,
-                          onPinChanged: onPinChanged,
-                          onLanguageChanged: onLanguageChanged,
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(Icons.settings, color: Colors.white),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -444,15 +808,7 @@ class _DashboardHomeBody extends StatelessWidget {
                     borderColor: const Color(0xFFE2E0E0),
                     name: 'Hanyakra Narendra',
                     role: 'Supervisor',
-                    onTap: () {
-                      popup.hide();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ProfilePage(),
-                        ),
-                      );
-                    },
+                    onTap: onTapProfileShortcut,
                   ),
                   if (hasSearch) ...[
                     const SizedBox(height: 10),
@@ -488,14 +844,12 @@ class _DashboardHomeBody extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 14),
-
                   if (showStats && filteredStats.isNotEmpty) ...[
                     LayoutBuilder(
                       builder: (context, c) {
                         const spacing = 12.0;
-                        final columns = filteredStats.length >= 4
-                            ? 4
-                            : filteredStats.length;
+                        final columns =
+                            filteredStats.length >= 4 ? 4 : filteredStats.length;
                         final itemW =
                             (c.maxWidth - spacing * (columns - 1)) / columns;
                         final itemH = isTablet ? 96.0 : 78.0;
@@ -518,7 +872,6 @@ class _DashboardHomeBody extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   if (showMenus && filteredMenus.isNotEmpty) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -550,7 +903,6 @@ class _DashboardHomeBody extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                   ],
-
                   if (showActivities && filteredActivities.isNotEmpty) ...[
                     Text(
                       'Recent Activities',
@@ -571,7 +923,7 @@ class _DashboardHomeBody extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const UpdateInventoryPage(),
+                              builder: (_) => UpdateInventoryPage(),
                             ),
                           );
                         }
@@ -579,7 +931,6 @@ class _DashboardHomeBody extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   if (hasSearch && !hasAnyResult)
                     const _SearchEmptyState(
                       title: 'Data tidak ditemukan',
@@ -768,39 +1119,30 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final isTablet = w >= 768;
-
     return Material(
       color: bg,
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: border, width: 1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: border),
           ),
+          padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: isTablet ? 30 : 26,
-                color: const Color(0xFF111827),
-              ),
-              const SizedBox(height: 8),
+              Icon(icon, size: 30, color: const Color(0xFF111827)),
+              const SizedBox(height: 12),
               Text(
                 label,
                 textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: isTablet ? 14 : 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF111827),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
                 ),
               ),
             ],
@@ -815,7 +1157,7 @@ class _ActivityCard extends StatelessWidget {
   final Color bg;
   final Color border;
   final List<_ActivityItemData> items;
-  final void Function(int index) onTapItem;
+  final ValueChanged<int> onTapItem;
 
   const _ActivityCard({
     required this.bg,
@@ -826,71 +1168,53 @@ class _ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final isTablet = w >= 768;
-
     return Container(
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: border, width: 1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
       ),
       child: Column(
-        children: List.generate(items.length, (i) {
-          final item = items[i];
-          final isLast = i == items.length - 1;
-
-          return InkWell(
-            onTap: () => onTapItem(i),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isLast ? Colors.transparent : border,
-                    width: 1,
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => onTapItem(index),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                  child: Row(
+                    children: [
+                      Icon(item.icon, color: item.iconColor, size: 28),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF111827),
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    item.icon,
-                    color: item.iconColor,
-                    size: isTablet ? 26 : 22,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      item.title,
-                      style: TextStyle(
-                        fontSize: isTablet ? 18 : 15,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF111827),
-                      ),
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
-                ],
-              ),
-            ),
+              if (index != items.length - 1)
+                const Divider(height: 1, color: Color(0xFFDCECFF)),
+            ],
           );
         }),
       ),
     );
   }
-}
-
-class _ActivityItemData {
-  final String title;
-  final IconData icon;
-  final Color iconColor;
-
-  const _ActivityItemData({
-    required this.title,
-    required this.icon,
-    required this.iconColor,
-  });
 }
 
 class _BottomNav extends StatelessWidget {
@@ -908,7 +1232,7 @@ class _BottomNav extends StatelessWidget {
       currentIndex: currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: const Color(0xFF111827),
+      selectedItemColor: const Color(0xFF101D6E),
       unselectedItemColor: const Color(0xFF6B7280),
       items: const [
         BottomNavigationBarItem(
@@ -920,7 +1244,7 @@ class _BottomNav extends StatelessWidget {
           label: 'Chat',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.folder_open),
+          icon: Icon(Icons.folder_outlined),
           label: 'File Manager',
         ),
         BottomNavigationBarItem(
@@ -932,173 +1256,148 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-class SettingsPopupController {
-  OverlayEntry? _entry;
+class _AppSidebar extends StatelessWidget {
+  final VoidCallback onTapProfile;
+  final VoidCallback onTapSettings;
+  final VoidCallback onTapHelpCenter;
+  final VoidCallback onTapMyWork;
+  final VoidCallback onTapTask;
+  final VoidCallback onTapMeeting;
+  final VoidCallback onTapNotepad;
+  final VoidCallback onTapNotes;
+  final VoidCallback onTapArsip;
+  final VoidCallback onTapArchive;
+  final VoidCallback onTapActivityLog;
+  final VoidCallback onTapReports;
 
-  void show({
-    required BuildContext context,
-    required LayerLink link,
-    required bool darkMode,
-    required bool pinEnabled,
-    required String language,
-    required ValueChanged<bool> onDarkModeChanged,
-    required ValueChanged<bool> onPinChanged,
-    required ValueChanged<String> onLanguageChanged,
-  }) {
-    hide();
-
-    _entry = OverlayEntry(
-      builder: (_) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: hide,
-                behavior: HitTestBehavior.opaque,
-                child: const SizedBox(),
-              ),
-            ),
-            CompositedTransformFollower(
-              link: link,
-              showWhenUnlinked: false,
-              offset: const Offset(-260, 38),
-              child: Material(
-                color: Colors.transparent,
-                child: _SettingsPopupCard(
-                  darkMode: darkMode,
-                  pinEnabled: pinEnabled,
-                  language: language,
-                  onClose: hide,
-                  onDarkModeChanged: onDarkModeChanged,
-                  onPinChanged: onPinChanged,
-                  onLanguageChanged: onLanguageChanged,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    Overlay.of(context).insert(_entry!);
-  }
-
-  void hide() {
-    _entry?.remove();
-    _entry = null;
-  }
-}
-
-class _SettingsPopupCard extends StatelessWidget {
-  final bool darkMode;
-  final bool pinEnabled;
-  final String language;
-
-  final VoidCallback onClose;
-  final ValueChanged<bool> onDarkModeChanged;
-  final ValueChanged<bool> onPinChanged;
-  final ValueChanged<String> onLanguageChanged;
-
-  const _SettingsPopupCard({
-    required this.darkMode,
-    required this.pinEnabled,
-    required this.language,
-    required this.onClose,
-    required this.onDarkModeChanged,
-    required this.onPinChanged,
-    required this.onLanguageChanged,
+  const _AppSidebar({
+    required this.onTapProfile,
+    required this.onTapSettings,
+    required this.onTapHelpCenter,
+    required this.onTapMyWork,
+    required this.onTapTask,
+    required this.onTapMeeting,
+    required this.onTapNotepad,
+    required this.onTapNotes,
+    required this.onTapArsip,
+    required this.onTapArchive,
+    required this.onTapActivityLog,
+    required this.onTapReports,
   });
+
+  static const Color navy = Color(0xFF101D6E);
+  static const Color text = Color(0xFF111827);
+  static const Color muted = Color(0xFF6B7280);
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final cardW = w < 360 ? w - 24 : 285.0;
-
-    return SafeArea(
-      child: Container(
-        width: cardW,
-        margin: const EdgeInsets.only(top: 6),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF4F5FF),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFDCECFF)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
+    return Drawer(
+      child: SafeArea(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                InkWell(
-                  onTap: onClose,
-                  borderRadius: BorderRadius.circular(10),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(Icons.arrow_back, size: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+              decoration: const BoxDecoration(color: navy),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.white24,
+                    child: Icon(Icons.person_outline, color: Colors.white, size: 28),
                   ),
-                ),
-                const SizedBox(width: 6),
-                const Expanded(
-                  child: Text(
-                    'Pengaturan',
+                  SizedBox(height: 12),
+                  Text(
+                    'Hanyakra Narendra',
                     style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      fontSize: 14,
                     ),
                   ),
-                ),
-                const Icon(
-                  Icons.settings,
-                  size: 18,
-                  color: Color(0xFF6B7280),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            _SectionCard(
-              title: 'Tampilan',
-              child: Column(
-                children: [
-                  _RowSwitch(
-                    icon: Icons.dark_mode_outlined,
-                    label: 'Mode gelap',
-                    value: darkMode,
-                    onChanged: onDarkModeChanged,
-                  ),
-                  const SizedBox(height: 8),
-                  _RowDropdown(
-                    icon: Icons.language_outlined,
-                    label: 'Bahasa',
-                    value: language,
-                    items: const ['Indonesia', 'English'],
-                    onChanged: onLanguageChanged,
+                  SizedBox(height: 4),
+                  Text(
+                    'Supervisor • WorkingTools',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-            _SectionCard(
-              title: 'Keamanan',
-              child: Column(
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(top: 8),
                 children: [
-                  _RowAction(
-                    icon: Icons.lock_outline,
-                    label: 'Ganti kata sandi',
-                    onTap: onClose,
+                  const _SidebarSectionTitle(title: 'Akun'),
+                  _SidebarTile(
+                    icon: Icons.person_outline,
+                    label: 'Profile',
+                    onTap: onTapProfile,
                   ),
-                  const SizedBox(height: 8),
-                  _RowSwitch(
-                    icon: Icons.pin_outlined,
-                    label: 'Aktifkan pin',
-                    value: pinEnabled,
-                    onChanged: onPinChanged,
+                  _SidebarTile(
+                    icon: Icons.settings_outlined,
+                    label: 'Pengaturan',
+                    onTap: onTapSettings,
+                  ),
+                  _SidebarTile(
+                    icon: Icons.help_outline,
+                    label: 'Help Center',
+                    onTap: onTapHelpCenter,
+                  ),
+                  const Divider(height: 20),
+                  const _SidebarSectionTitle(title: 'Workspace'),
+                  _SidebarTile(
+                    icon: Icons.work_outline,
+                    label: 'My Work',
+                    onTap: onTapMyWork,
+                  ),
+                  _SidebarTile(
+                    icon: Icons.task_alt_outlined,
+                    label: 'Task',
+                    onTap: onTapTask,
+                  ),
+                  _SidebarTile(
+                    icon: Icons.groups_2_outlined,
+                    label: 'Meeting',
+                    onTap: onTapMeeting,
+                  ),
+                  const Divider(height: 20),
+                  const _SidebarSectionTitle(title: 'Notes & Arsip'),
+                  _SidebarTile(
+                    icon: Icons.sticky_note_2_outlined,
+                    label: 'Notepad',
+                    onTap: onTapNotepad,
+                  ),
+                  _SidebarTile(
+                    icon: Icons.note_alt_outlined,
+                    label: 'Notes',
+                    onTap: onTapNotes,
+                  ),
+                  _SidebarTile(
+                    icon: Icons.archive_outlined,
+                    label: 'Arsip',
+                    onTap: onTapArsip,
+                  ),
+                  _SidebarTile(
+                    icon: Icons.folder_zip_outlined,
+                    label: 'Archive',
+                    onTap: onTapArchive,
+                  ),
+                  const Divider(height: 20),
+                  const _SidebarSectionTitle(title: 'Monitoring'),
+                  _SidebarTile(
+                    icon: Icons.history,
+                    label: 'Activity Log',
+                    onTap: onTapActivityLog,
+                  ),
+                  _SidebarTile(
+                    icon: Icons.assessment_outlined,
+                    label: 'Reports',
+                    onTap: onTapReports,
                   ),
                 ],
               ),
@@ -1110,137 +1409,33 @@ class _SettingsPopupCard extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
+class _SidebarSectionTitle extends StatelessWidget {
   final String title;
-  final Widget child;
 
-  const _SectionCard({
-    required this.title,
-    required this.child,
-  });
+  const _SidebarSectionTitle({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.78),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDCECFF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-              color: Color(0xFF374151),
-            ),
-          ),
-          const SizedBox(height: 10),
-          child,
-        ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: _AppSidebar.muted,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
 }
 
-class _RowSwitch extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _RowSwitch({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: const Color(0xFF111827)),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ),
-        Switch.adaptive(
-          value: value,
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-}
-
-class _RowDropdown extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final List<String> items;
-  final ValueChanged<String> onChanged;
-
-  const _RowDropdown({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: const Color(0xFF111827)),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ),
-        DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: value,
-            items: items
-                .map(
-                  (e) => DropdownMenuItem<String>(
-                    value: e,
-                    child: Text(e),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) {
-              if (v != null) onChanged(v);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _RowAction extends StatelessWidget {
+class _SidebarTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  const _RowAction({
+  const _SidebarTile({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -1248,57 +1443,439 @@ class _RowAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return ListTile(
+      leading: Icon(icon, color: _AppSidebar.text),
+      title: Text(
+        label,
+        style: const TextStyle(
+          color: _AppSidebar.text,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: _AppSidebar.muted),
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: const Color(0xFF111827)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+    );
+  }
+}
+
+class _FeaturePage extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final List<_FeatureSectionData> sections;
+
+  const _FeaturePage({
+    required this.title,
+    required this.icon,
+    required this.sections,
+  });
+
+  static const Color bg = Color(0xFFF2F9FF);
+  static const Color navy = Color(0xFF101D6E);
+  static const Color card = Color(0xFFFAFEFF);
+  static const Color soft = Color(0xFFF4F5FF);
+  static const Color border = Color(0xFFDCECFF);
+  static const Color text = Color(0xFF111827);
+  static const Color muted = Color(0xFF6B7280);
+
+  void _showItemDetail(BuildContext context, _FeatureItemData item) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: text,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  item.subtitle,
+                  style: const TextStyle(
+                    color: muted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (item.badge.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8EEFF),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      item.badge,
+                      style: const TextStyle(
+                        color: navy,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: soft,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: border),
+                  ),
+                  child: Text(
+                    item.detail,
+                    style: const TextStyle(
+                      color: text,
+                      fontSize: 14,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        child: const Text('Tutup'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(sheetContext);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('${item.title} dipilih')),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: navy,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Pilih'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSection(BuildContext context, _FeatureSectionData section) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              section.title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: text,
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: Color(0xFF6B7280),
+            const SizedBox(height: 10),
+            ...section.items.map(
+              (item) => InkWell(
+                onTap: () => _showItemDetail(context, item),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: soft,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: border),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: border),
+                        ),
+                        child: Icon(item.icon, color: navy),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.title,
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: text,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.subtitle,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (item.badge.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8EEFF),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            item.badge,
+                            style: const TextStyle(
+                              color: navy,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: 8),
+                      const Icon(Icons.chevron_right, color: muted),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-
-  const _PlaceholderPage({
-    required this.title,
-  });
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: navy,
+        foregroundColor: Colors.white,
+        title: Text(title),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: navy,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.14),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 26),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '$title Workspace',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+          ...sections.map((section) => _buildSection(context, section)),
+        ],
       ),
     );
   }
+}
+
+class _SettingsPage extends StatefulWidget {
+  const _SettingsPage();
+
+  @override
+  State<_SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<_SettingsPage> {
+  static const Color bg = Color(0xFFF2F9FF);
+  static const Color navy = Color(0xFF101D6E);
+  static const Color card = Color(0xFFFAFEFF);
+  static const Color soft = Color(0xFFF4F5FF);
+  static const Color border = Color(0xFFDCECFF);
+
+  bool _darkMode = false;
+  bool _pinEnabled = true;
+  bool _notificationEnabled = true;
+  String _language = 'Indonesia';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: navy,
+        foregroundColor: Colors.white,
+        title: const Text('Pengaturan'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: card,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: border),
+            ),
+            child: Column(
+              children: [
+                SwitchListTile.adaptive(
+                  value: _darkMode,
+                  onChanged: (v) => setState(() => _darkMode = v),
+                  title: const Text('Mode gelap'),
+                  subtitle: const Text('Aktifkan tampilan gelap'),
+                  secondary: const Icon(Icons.dark_mode_outlined),
+                ),
+                SwitchListTile.adaptive(
+                  value: _pinEnabled,
+                  onChanged: (v) => setState(() => _pinEnabled = v),
+                  title: const Text('Aktifkan PIN'),
+                  subtitle: const Text('Keamanan login tambahan'),
+                  secondary: const Icon(Icons.pin_outlined),
+                ),
+                SwitchListTile.adaptive(
+                  value: _notificationEnabled,
+                  onChanged: (v) => setState(() => _notificationEnabled = v),
+                  title: const Text('Notifikasi'),
+                  subtitle: const Text('Izinkan notifikasi aplikasi'),
+                  secondary: const Icon(Icons.notifications_active_outlined),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: soft,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _language,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Indonesia',
+                          child: Text('Indonesia'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'English',
+                          child: Text('English'),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) {
+                          setState(() => _language = v);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureSectionData {
+  final String title;
+  final List<_FeatureItemData> items;
+
+  const _FeatureSectionData({
+    required this.title,
+    required this.items,
+  });
+}
+
+class _FeatureItemData {
+  final String title;
+  final String subtitle;
+  final String detail;
+  final IconData icon;
+  final String badge;
+
+  const _FeatureItemData({
+    required this.title,
+    required this.subtitle,
+    required this.detail,
+    required this.icon,
+    this.badge = '',
+  });
 }
 
 class _DashboardStatData {
@@ -1322,6 +1899,18 @@ class _DashboardMenuData {
     required this.label,
     required this.icon,
     required this.onTap,
+  });
+}
+
+class _ActivityItemData {
+  final String title;
+  final IconData icon;
+  final Color iconColor;
+
+  const _ActivityItemData({
+    required this.title,
+    required this.icon,
+    required this.iconColor,
   });
 }
 
@@ -1366,7 +1955,7 @@ class _SearchEmptyState extends StatelessWidget {
               color: Color(0xFF6B7280),
               fontWeight: FontWeight.w500,
             ),
-          ),
+           ),
         ],
       ),
     );

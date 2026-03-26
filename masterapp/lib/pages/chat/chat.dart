@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'chating.dart';
 import '../notifications/notification.dart';
+import '../sidebar/app_sidebar.dart ';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -27,6 +28,7 @@ class _ChatPageState extends State<ChatPage> {
 
   final LayerLink _settingsLink = LayerLink();
   final SettingsPopupController _popup = SettingsPopupController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _darkMode = false;
   bool _pinEnabled = false;
@@ -584,14 +586,19 @@ class _ChatPageState extends State<ChatPage> {
       return textOk && filterOk;
     }).toList();
 
-    return Container(
-      color: bg,
-      child: SafeArea(
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: bg,
+      drawer: const WorkingToolsSidebar(
+        activeMenu: WorkingToolsMenu.chat,
+      ),
+      body: SafeArea(
         child: Column(
           children: [
             _TopBarNavy(
               title: "Chat (home page)",
               settingsLink: _settingsLink,
+              onMenu: () => _scaffoldKey.currentState?.openDrawer(),
               onGear: _openSettingsPopup,
               onBell: _openNotificationPage,
               onSearch: _openChatSearchFilter,
@@ -738,6 +745,7 @@ class _ChatPageState extends State<ChatPage> {
 class _TopBarNavy extends StatelessWidget {
   final String title;
   final LayerLink settingsLink;
+  final VoidCallback onMenu;
   final VoidCallback onGear;
   final VoidCallback onBell;
   final VoidCallback onSearch;
@@ -745,6 +753,7 @@ class _TopBarNavy extends StatelessWidget {
   const _TopBarNavy({
     required this.title,
     required this.settingsLink,
+    required this.onMenu,
     required this.onGear,
     required this.onBell,
     required this.onSearch,
@@ -758,9 +767,14 @@ class _TopBarNavy extends StatelessWidget {
     return Container(
       height: isTablet ? 90 : 80,
       decoration: const BoxDecoration(color: _ChatPageState.navy),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
+          IconButton(
+            onPressed: onMenu,
+            icon: const Icon(Icons.menu_rounded),
+            color: Colors.white,
+          ),
           Expanded(
             child: Text(
               title,

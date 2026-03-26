@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'editprofile.dart';
 import '../notifications/notification.dart';
+import '../sidebar/app_sidebar.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,6 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   static const Color TEXT = Color(0xFF111827);
 
   final SettingsPopupController _popup = SettingsPopupController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _darkMode = false;
   bool _pinEnabled = false;
@@ -41,7 +43,11 @@ class _ProfilePageState extends State<ProfilePage> {
     final isTablet = w >= 768;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: BG,
+      drawer: const WorkingToolsSidebar(
+        activeMenu: WorkingToolsMenu.profile,
+      ),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -52,6 +58,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
+                    IconButton(
+                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                      icon: const Icon(Icons.menu_rounded),
+                      color: Colors.white,
+                    ),
                     Expanded(
                       child: Text(
                         'Profil',
@@ -116,9 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         );
                       },
                     ),
-
                     const SizedBox(height: 20),
-
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -158,9 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
                     Row(
                       children: [
                         const Icon(Icons.help_outline, size: 18, color: TEXT),
@@ -176,7 +183,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -213,9 +219,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     InkWell(
                       onTap: () => _popup.hide(),
                       borderRadius: BorderRadius.circular(10),
@@ -238,7 +242,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 90),
                   ],
                 ),
