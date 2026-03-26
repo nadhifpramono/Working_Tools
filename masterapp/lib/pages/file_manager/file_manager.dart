@@ -14,8 +14,6 @@ class ProjectFilesView extends StatefulWidget {
   final Color navy;
   final Color card;
   final Color muted;
-  final void Function(FileManagerEntry? selected, String? currentFolderId)?
-      onContextChanged;
 
   const ProjectFilesView({
     super.key,
@@ -23,12 +21,17 @@ class ProjectFilesView extends StatefulWidget {
     required this.query,
     required this.navy,
     required this.card,
-    required this.muted,
-    this.onContextChanged,
+    required this.muted, required Null Function(selected, folderId) onContextChanged,
   });
 
   @override
   State<ProjectFilesView> createState() => ProjectFilesViewState();
+}
+
+class folderId {
+}
+
+class selected {
 }
 
 class ProjectFilesViewState extends State<ProjectFilesView> {
@@ -37,7 +40,6 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
 
   List<FileManagerEntry> _entries = const [];
   String? _currentFolderId;
-  FileManagerEntry? _selected;
 
   FileCategory? _categoryFilter;
   bool _pinnedOnly = false;
@@ -61,7 +63,6 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
       _entries = items;
       _loading = false;
     });
-    _notifyContextChanged();
   }
 
   Future<void> _persist(List<FileManagerEntry> next) async {
@@ -135,37 +136,6 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
       current = current.parentId == null ? null : byId[current.parentId!];
     }
     return chain;
-  }
-
-  void _notifyContextChanged() {
-    final cb = widget.onContextChanged;
-    if (cb == null) return;
-    cb(_selected, _currentFolderId);
-  }
-
-  void _setSelected(FileManagerEntry? entry) {
-    _selected = entry;
-    _notifyContextChanged();
-  }
-
-  void _setCurrentFolder(String? folderId) {
-    _currentFolderId = folderId;
-
-    if (folderId == null) {
-      _selected = null;
-      _notifyContextChanged();
-      return;
-    }
-
-    FileManagerEntry? folder;
-    for (final e in _entries) {
-      if (e.id == folderId) {
-        folder = e;
-        break;
-      }
-    }
-    _selected = folder;
-    _notifyContextChanged();
   }
 
   String _prettyBytes(int bytes) {
@@ -487,7 +457,7 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
     }
 
     if (_currentFolderId != null && toDelete.contains(_currentFolderId)) {
-      setState(() => _setCurrentFolder(null));
+      setState(() => _currentFolderId = null);
     }
   }
 
@@ -613,11 +583,9 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
 
   Future<void> _open(FileManagerEntry entry) async {
     if (entry.isFolder) {
-      setState(() => _setCurrentFolder(entry.id));
+      setState(() => _currentFolderId = entry.id);
       return;
     }
-
-    _setSelected(entry);
 
     final now = DateTime.now();
     final next = _entries.map((e) {
@@ -661,7 +629,7 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
                     child: Image.memory(
                       bytes,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) {
+                      errorBuilder: (_, _, _) {
                         return const Padding(
                           padding: EdgeInsets.all(16),
                           child: Text(
@@ -987,7 +955,7 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
                 subtitle: entry.isFolder
                     ? const Text('Folder')
                     : Text(
-                        '${_categoryLabel(entry.category)} - ${_prettyBytes(entry.sizeBytes)}',
+                        '${_categoryLabel(entry.category)} • ${_prettyBytes(entry.sizeBytes)}',
                       ),
               ),
               const Divider(height: 1),
@@ -1018,7 +986,6 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
     if (action == null) return;
     switch (action) {
       case 'open':
-        _setSelected(entry);
         await _open(entry);
         return;
       case 'share':
@@ -1069,7 +1036,7 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
                 runSpacing: 6,
                 children: [
                   TextButton.icon(
-                    onPressed: () => setState(() => _setCurrentFolder(null)),
+                    onPressed: () => setState(() => _currentFolderId = null),
                     icon: const Icon(Icons.home_rounded, size: 18),
                     label: const Text('Root'),
                   ),
@@ -1080,7 +1047,7 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
                       color: Colors.black45,
                     ),
                     TextButton(
-                      onPressed: () => setState(() => _setCurrentFolder(f.id)),
+                      onPressed: () => setState(() => _currentFolderId = f.id),
                       child: Text(f.name),
                     ),
                   ],
@@ -1116,7 +1083,7 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: recent.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
               itemBuilder: (_, i) {
                 final e = recent[i];
                 return ActionChip(
@@ -1126,10 +1093,7 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
                     color: _colorFor(e),
                   ),
                   label: Text(e.name, overflow: TextOverflow.ellipsis),
-                  onPressed: () {
-                    _setSelected(e);
-                    _open(e);
-                  },
+                  onPressed: () => _open(e),
                 );
               },
             ),
@@ -1187,11 +1151,8 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
                 color: _colorFor(e),
                 subtitle: e.isFolder
                     ? '${_childrenOf(e.id).length} items'
-                    : '${_categoryLabel(e.category)} - ${_prettyBytes(e.sizeBytes)}',
-                onOpen: () {
-                  _setSelected(e);
-                  _open(e);
-                },
+                    : '${_categoryLabel(e.category)} • ${_prettyBytes(e.sizeBytes)}',
+                onOpen: () => _open(e),
                 onMenu: () => _showEntryMenu(e),
               ),
             ),
@@ -1206,11 +1167,8 @@ class ProjectFilesViewState extends State<ProjectFilesView> {
               color: _colorFor(e),
               subtitle: e.isFolder
                   ? '${_childrenOf(e.id).length} items'
-                  : '${_categoryLabel(e.category)} - ${_prettyBytes(e.sizeBytes)}',
-              onOpen: () {
-                _setSelected(e);
-                _open(e);
-              },
+                  : '${_categoryLabel(e.category)} • ${_prettyBytes(e.sizeBytes)}',
+              onOpen: () => _open(e),
               onMenu: () => _showEntryMenu(e),
             ),
           ),

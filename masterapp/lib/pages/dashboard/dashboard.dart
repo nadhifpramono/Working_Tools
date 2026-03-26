@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:masterapp/pages/finance/finance_page.dart';
 
 import '../../models/project_item.dart';
 import '../profile/profile.dart';
@@ -353,7 +354,19 @@ class _DashboardHomeBody extends StatelessWidget {
       _DashboardMenuData(
         label: 'Finance',
         icon: Icons.account_balance_wallet_outlined,
-        onTap: () {},
+        onTap: () {
+          popup.hide();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FinancePage
+            
+            
+            
+            
+            
+            ()),
+          );
+        },
       ),
       _DashboardMenuData(
         label: 'Service All',

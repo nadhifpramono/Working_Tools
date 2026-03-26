@@ -877,7 +877,7 @@ class _ServicePageState extends State<ServicePage> {
     required IconData icon,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       icon: const Icon(Icons.keyboard_arrow_down_rounded, color: NAVY),
       decoration: InputDecoration(
