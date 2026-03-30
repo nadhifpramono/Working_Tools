@@ -91,10 +91,16 @@ class _FileManagerHomePageState extends State<FileManagerHomePage> {
         child: Column(
           children: [
             _TopBar(
-              title: 'File Manager',
+              title: 'Project Room',
               showBack: widget.showBack,
-              onMenu: () => _scaffoldKey.currentState?.openDrawer(),
-              onBack: () => Navigator.pop(context),
+              onBack: () {
+                final nav = Navigator.of(context, rootNavigator: true);
+                if (nav.canPop()) {
+                  nav.pop();
+                  return;
+                }
+                nav.pushReplacementNamed('/dashboard');
+              }, onMenu: () {  },
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),

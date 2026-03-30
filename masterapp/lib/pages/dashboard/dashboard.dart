@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:masterapp/pages/finance/finance_page.dart';
+
+import '../../models/project_item.dart';
 import '../profile/profile.dart';
 import '../inventory/inventory.dart';
 import '../inventory/updateinventory.dart';
 import '../project_management/project_management.dart';
+import '../project_management/note_management.dart';
+import '../project_management/task_management.dart';
 import '../file_manager/file_manager_home.dart';
 import '../notifications/notification.dart';
 import '../chat/chat.dart';
@@ -582,8 +587,9 @@ class _DashboardPageState extends State<DashboardPage> {
             searchKeyword: _dashboardKeyword,
             searchFilter: _dashboardFilter,
           ),
-          ChatPage(),
-          FileManagerHomePage(),
+
+          const ChatPage(),
+          const FileManagerHomePage(),
           const ProfilePage(),
         ],
       ),
@@ -632,6 +638,17 @@ class _DashboardHomeBody extends StatelessWidget {
 
     final keyword = searchKeyword.trim().toLowerCase();
 
+    const defaultProject = ProjectItem(
+      title: 'Renovasi Kantor',
+      subtitle: 'Membenarkan Plafon yang rusak',
+      progress: 0.90,
+      status: 'In Progress',
+      priority: 'High',
+      totalTask: 12,
+      doneTask: 10,
+      deadline: '25 Feb 2026',
+    );
+
     bool matches(String value) {
       if (keyword.isEmpty) return true;
       return value.toLowerCase().contains(keyword);
@@ -657,7 +674,7 @@ class _DashboardHomeBody extends StatelessWidget {
 
     final menus = <_DashboardMenuData>[
       _DashboardMenuData(
-        label: 'file manager',
+        label: 'Project Room',
         icon: Icons.description_outlined,
         onTap: () {
           Navigator.push(
@@ -669,7 +686,7 @@ class _DashboardHomeBody extends StatelessWidget {
         },
       ),
       _DashboardMenuData(
-        label: 'project management',
+        label: 'Project Management',
         icon: Icons.assignment_outlined,
         onTap: () {
           Navigator.push(
@@ -681,7 +698,7 @@ class _DashboardHomeBody extends StatelessWidget {
         },
       ),
       _DashboardMenuData(
-        label: 'inventory',
+        label: 'Inventory',
         icon: Icons.inventory_2_outlined,
         onTap: () {
           Navigator.push(
@@ -693,25 +710,27 @@ class _DashboardHomeBody extends StatelessWidget {
         },
       ),
       _DashboardMenuData(
-        label: 'notes',
+        label: 'Notes',
         icon: Icons.event_note_outlined,
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Halaman notes ada di sidebar')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const Note11Dk()),
           );
         },
       ),
       _DashboardMenuData(
-        label: 'finance',
+        label: 'Finance',
         icon: Icons.account_balance_wallet_outlined,
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Halaman finance belum dibuat')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FinancePage()),
           );
         },
       ),
       _DashboardMenuData(
-        label: 'service all',
+        label: 'Service All',
         icon: Icons.grid_view_rounded,
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -924,6 +943,16 @@ class _DashboardHomeBody extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => UpdateInventoryPage(),
+                            ),
+                          );
+                        }
+                        if (tapped.title == 'New Task Assigned') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TaskManagementPage(
+                                project: defaultProject,
+                              ),
                             ),
                           );
                         }
@@ -1244,8 +1273,8 @@ class _BottomNav extends StatelessWidget {
           label: 'Chat',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.folder_outlined),
-          label: 'File Manager',
+          icon: Icon(Icons.folder_open),
+          label: 'Project Room',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),

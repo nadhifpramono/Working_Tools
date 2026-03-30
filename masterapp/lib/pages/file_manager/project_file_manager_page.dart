@@ -57,7 +57,7 @@ class _ProjectFileManagerPageState extends State<ProjectFileManagerPage> {
           child: Column(
             children: [
               _TopBar(
-                title: 'File Manager',
+                title: 'Project Room',
                 subtitle: widget.project.title,
                 onBack: () => Navigator.pop(context),
               ),
@@ -97,9 +97,10 @@ class _ProjectFileManagerPageState extends State<ProjectFileManagerPage> {
                                 navy: NAVY,
                                 card: CARD,
                                 muted: MUTED,
+                                // ignore: avoid_types_as_parameter_names
                                 onContextChanged: (selected, folderId) {
-                                  _selected.value = selected;
-                                  _currentFolderId.value = folderId;
+                                  _selected.value = selected as FileManagerEntry?;
+                                  _currentFolderId.value = folderId as String?;
                                 },
                               ),
                             ],
